@@ -13,9 +13,10 @@ body {
 }
 /* Adjust the size of the hero image */
 .hero-image {
-  max-width: 100%; /* Ensure the image fits within its container */
+  max-width: 50%; /* Ensure the image fits within its container */
   height: auto; /* Maintain aspect ratio */
 }
+
 header {
     background-color: #333;
     color: #fff;
