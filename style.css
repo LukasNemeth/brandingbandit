@@ -11,7 +11,11 @@ body {
     background-color: #f0f0f0;
     line-height: 1.6;
 }
-
+/* Adjust the size of the hero image */
+.hero-image {
+  max-width: 100%; /* Ensure the image fits within its container */
+  height: auto; /* Maintain aspect ratio */
+}
 header {
     background-color: #333;
     color: #fff;
@@ -55,4 +59,12 @@ footer {
     padding: 10px;
     font-size: 14px; /* Adjust font size for footer text */
 }
+/* Center-align all text in the body */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center; /* Center-align text within its container */
+}
+
 
