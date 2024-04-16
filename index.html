@@ -76,6 +76,14 @@
     <footer>
         <p>&copy; 2024 Branding Bandit</p>
     </footer>
+const ctaBar = document.getElementById('cta-bar');
+window.onscroll = function() {
+  if (window.scrollY > 100) {
+    ctaBar.style.display = 'block';
+  } else {
+    ctaBar.style.display = 'none';
+  }
+};
 </body>
 </html>
 
