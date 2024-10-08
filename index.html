@@ -73,6 +73,15 @@
                         allowtransparency="true" 
                         allow="encrypted-media">
                     </iframe>
+                    <script>
+                        // Send a message to the Spotify player to let it know our domain
+                        var spotifyPlayer = document.querySelector('iframe[src^="https://open.spotify.com"]');
+                        spotifyPlayer.contentWindow.postMessage({
+                        type: 'listeningOn',
+                        domain: window.location.hostname,
+                        gtmId: 'GTM-5R5J2KDR'
+                        }, 'https://open.spotify.com');
+                    </script>
 
             <!-- Sample link for testing GTM event trigger -->
             <a href="https://www.facebook.com" id="test-link" target="_blank">Visit Facebook</a>
