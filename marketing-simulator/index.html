@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ad Budget Tycoon</title>
+<meta name="description" content="A 12-month business simulator. Split the ad budget of an online shop or local business across Meta, Google, Criteo, Sklik and Heureka, using benchmark data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --bg: #F2F4F7;
+  --panel: #FFFFFF;
+  --ink: #101828;
+  --muted: #4F5C6D;
+  --line: #D5DCE5;
+  --accent: #101828;
+  --accent-ink: #FFFFFF;
+  --profit: #0F6B41;
+  --loss: #B42318;
+  --warn: #7A4E00;
+  --focus: #1D5FD6;
+  --c-meta: #2F6FDB;
+  --c-google: #C98A00;
+  --c-criteo: #7A5AD8;
+  --c-sklik: #0E8F7E;
+  --c-heureka: #D9531A;
+  --f-display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1421;
+    --panel: #151E2F;
+    --ink: #E9EEF6;
+    --muted: #A7B2C2;
+    --line: #2B3850;
+    --accent: #E9EEF6;
+    --accent-ink: #0D1421;
+    --profit: #5BD39A;
+    --loss: #FF8B80;
+    --warn: #F5C25C;
+    --focus: #8DB2FF;
+    --c-meta: #5D8FF0;
+    --c-google: #F2B43A;
+    --c-criteo: #A593F2;
+    --c-sklik: #3CC7B4;
+    --c-heureka: #FF8D55;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1421;
+  --panel: #151E2F;
+  --ink: #E9EEF6;
+  --muted: #A7B2C2;
+  --line: #2B3850;
+  --accent: #E9EEF6;
+  --accent-ink: #0D1421;
+  --profit: #5BD39A;
+  --loss: #FF8B80;
+  --warn: #F5C25C;
+  --focus: #8DB2FF;
+  --c-meta: #5D8FF0;
+  --c-google: #F2B43A;
+  --c-criteo: #A593F2;
+  --c-sklik: #3CC7B4;
+  --c-heureka: #FF8D55;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 15px/1.5 var(--f-body);
+}
+.wrap {
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 16px;
+  padding-block: 20px 48px;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h2 { font: 700 1.35rem/1.2 var(--f-display); margin-bottom: 8px; }
+h3 { font: 700 1.05rem/1.25 var(--f-display); margin-bottom: 8px; }
+p { margin: 0 0 10px; }
+ul { margin: 0; padding-left: 1.2em; }
+li { margin: 6px 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.good { color: var(--profit); }
+.bad { color: var(--loss); }
+.narrow { max-width: 680px; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-bottom: 20px;
+}
+.brand { font: 700 1.8rem/1.1 var(--f-display); letter-spacing: -0.01em; }
+.brand small {
+  display: block;
+  font: 400 0.92rem/1.4 var(--f-body);
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 0;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+}
+.tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 600 14px/1.2 var(--f-body);
+  padding: 9px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.tab[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 15px/1.2 var(--f-body);
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn.small-btn { font-size: 13px; padding: 8px 12px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+/* Setup */
+.intro { color: var(--muted); max-width: 66ch; margin-bottom: 18px; }
+.profiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.profile { display: flex; flex-direction: column; gap: 10px; }
+.profile h3 { margin: 0; }
+.facts { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; margin: 0; font-size: 0.88rem; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-family: var(--f-data); text-align: right; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 0.76rem;
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.chip::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.profile .btn { margin-top: auto; }
+.best-line { font-size: 0.85rem; color: var(--muted); }
+
+/* Play */
+.play-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; margin-bottom: 12px; }
+.event {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: baseline;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+}
+.tag {
+  font: 600 0.72rem/1 var(--f-body);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--line);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+.stat .k { font-size: 0.78rem; color: var(--muted); }
+.stat .v { font: 500 1.15rem/1.3 var(--f-data); margin-top: 4px; overflow-wrap: anywhere; }
+
+.play {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 860px) { .play { grid-template-columns: minmax(0, 1fr); } }
+.channels-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.chan { padding: 14px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.chan:first-of-type { padding-top: 6px; }
+.chan:last-child { border-bottom: 0; padding-bottom: 0; }
+.chan.off { opacity: 0.6; }
+.chan-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.chan-head .meta { margin-left: auto; font: 400 0.8rem/1.4 var(--f-data); color: var(--muted); }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; display: inline-block; }
+.chan p { margin: 4px 0 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+.controls input[type="range"] { flex: 1 1 180px; min-width: 0; accent-color: var(--c); }
+.controls input[type="number"] {
+  width: 140px;
+  font: 500 0.95rem/1.2 var(--f-data);
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+}
+.fc { font: 400 0.8rem/1.45 var(--f-data); color: var(--muted); margin-top: 8px; overflow-wrap: anywhere; }
+
+.fc-panel { position: sticky; top: 16px; }
+@media (max-width: 860px) { .fc-panel { position: static; } }
+.fc-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+.fc-row > span:last-child { font-family: var(--f-data); text-align: right; }
+.fc-row.total { font-weight: 600; border-bottom: 0; }
+.fc-note { font-size: 0.8rem; color: var(--muted); margin: 6px 0 10px; }
+.fc-limit { font-size: 0.8rem; color: var(--muted); margin-top: 10px; }
+
+/* Tables */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  margin-bottom: 16px;
+}
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.88rem; }
+th, td {
+  padding: 9px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  font-family: var(--f-data);
+  vertical-align: middle;
+}
+th { font: 600 0.78rem/1.3 var(--f-body); color: var(--muted); }
+th:first-child, td:first-child { text-align: left; font-family: var(--f-body); }
+tfoot td { font-weight: 600; border-bottom: 0; }
+tbody tr:last-child td { border-bottom: 0; }
+td.wrap-cell { white-space: normal; min-width: 180px; font-family: var(--f-body); text-align: left; }
+.pill {
+  font: 600 0.74rem/1 var(--f-body);
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  color: var(--muted);
+}
+.pill.good { color: var(--profit); }
+.pill.bad { color: var(--loss); }
+
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.cash-rows { display: grid; gap: 0; }
+.cash-rows div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.cash-rows div span:last-child { font-family: var(--f-data); text-align: right; }
+.cash-rows div.total { font-weight: 600; border-bottom: 0; }
+
+.callout {
+  border: 1px solid var(--loss);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 0.92rem;
+}
+.callout strong { color: var(--loss); }
+
+/* Results */
+.rating { font: 700 1.7rem/1.15 var(--f-display); margin: 4px 0 14px; }
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: minmax(120px, 0.9fr) minmax(0, 1.4fr) minmax(90px, auto); gap: 10px; align-items: center; font-size: 0.9rem; }
+.bar-row > span:last-child { font-family: var(--f-data); text-align: right; white-space: nowrap; }
+.track { position: relative; height: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
+.track::after { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 1px; background: var(--muted); }
+.track .fill { position: absolute; top: 0; bottom: 0; border-radius: 5px; background: var(--c); }
+@media (max-width: 520px) {
+  .bar-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .bar-row .track { grid-column: 1 / -1; grid-row: 2; }
+}
+.lessons li { margin: 8px 0; }
+
+/* Benchmarks */
+.bench-block { margin-bottom: 22px; }
+.bench-block > p { max-width: 72ch; }
+.sources li { margin: 10px 0; }
+.sources a { overflow-wrap: anywhere; color: var(--focus); }
+.legend { display: grid; gap: 4px; margin: 8px 0 12px; font-size: 0.88rem; }
+.caveats li { margin: 6px 0; }
+.foot { margin-top: 28px; font-size: 0.82rem; color: var(--muted); }
+.noscript { padding: 16px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">Ad Budget Tycoon<small>Run an online shop or local business for 12 months. Decide where every koruna of ad budget goes.</small></h1>
+    <nav class="tabs" aria-label="Main">
+      <button class="tab" type="button" id="tab-play" data-nav="play" aria-pressed="true">Play</button>
+      <button class="tab" type="button" id="tab-bench" data-nav="bench" aria-pressed="false">Benchmarks and sources</button>
+    </nav>
+  </header>
+
+  <noscript><p class="card noscript">This simulator needs JavaScript to run.</p></noscript>
+  <main id="app"></main>
+
+  <footer class="foot">
+    Figures come from public Czech and international agency and vendor reports, listed under Benchmarks and sources. The simulator is a learning tool. It does not forecast results for any real business.
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Settings ---------- */
+  var START_CASH = 500000;   // Kč
+  var MONTHS = 12;
+  var STEP = 1000;           // budget step in Kč
+  var EVENT_CHANCE = 0.5;    // chance that a month has a market event
+  var NOISE = 0.07;          // random variation on each step of a real month (±7%)
+  var HEUREKA_UPLIFT = 1.25; // Heureka seasonal price rise
+  var HEUREKA_UPLIFT_MONTHS = [10, 11, 0]; // Nov, Dec, Jan (0 = January)
+  var FX = 21;               // Kč per USD, planning rate (2026 average about 20.9, August about 21)
+  var BEST_KEY = 'ad-budget-tycoon-best';
+
+  /* ---------- Channels ---------- */
+  var CHANNELS = [
+    { id: 'meta', name: 'Meta Ads', color: 'var(--c-meta)', reach: 20000, eshopOnly: false,
+      desc: 'Facebook and Instagram feed ads. Mostly reaches people who do not know your brand yet.' },
+    { id: 'google', name: 'Google Ads', color: 'var(--c-google)', reach: 12000, eshopOnly: false,
+      desc: 'Search ads. People type what they want, so clicks carry strong intent.' },
+    { id: 'criteo', name: 'Criteo', color: 'var(--c-criteo)', reach: 4000, eshopOnly: true,
+      desc: 'Retargeting. Shows ads to people who already visited your online shop.' },
+    { id: 'sklik', name: 'Sklik', color: 'var(--c-sklik)', reach: 8000, eshopOnly: false,
+      desc: 'Seznam.cz search and content network. Clicks are usually cheaper than on Google Ads.' },
+    { id: 'heureka', name: 'Heureka', color: 'var(--c-heureka)', reach: 5000, eshopOnly: true,
+      desc: 'Czech price comparison site. You pay per click, and the minimum price depends on category and product price.' }
+  ];
+
+  /* Quality codes: M = measured figure from a named source, D = derived (midpoint or not category-specific),
+     L = low confidence (one third-party or older source), P = placeholder (no benchmark found). */
+  function ch(cpc, qc, cvr, qv) { return { cpc: cpc, qc: qc, cvr: cvr, qv: qv }; }
+
+  var PROFILES = {
+    fashion: {
+      name: 'Fashion e-shop', sector: 'Clothing and accessories online', eshop: true, unit: 'orders',
+      aov: 1100, margin: 0.45, fixed: 60000, organic: 40, reachScale: 1,
+      channels: {
+        meta: ch(11.74, 'D', 0.0279, 'D'),
+        google: ch(10.61, 'M', 0.0311, 'D'),
+        criteo: ch(15.96, 'L', 0.038, 'L'),
+        sklik: ch(4.62, 'M', 0.0311, 'P'),
+        heureka: ch(7.94, 'L', 0.03, 'L')
+      }
+    },
+    beauty: {
+      name: 'Beauty e-shop', sector: 'Cosmetics and skincare online', eshop: true, unit: 'orders',
+      aov: 900, margin: 0.55, fixed: 55000, organic: 40, reachScale: 1,
+      channels: {
+        meta: ch(11.74, 'D', 0.0452, 'D'),
+        google: ch(10.61, 'M', 0.0311, 'D'),
+        criteo: ch(15.96, 'L', 0.038, 'L'),
+        sklik: ch(4.62, 'M', 0.0311, 'P'),
+        heureka: ch(7.94, 'L', 0.03, 'L')
+      }
+    },
+    decor: {
+      name: 'Home decor e-shop', sector: 'Furniture and home decor online', eshop: true, unit: 'orders',
+      aov: 2400, margin: 0.40, fixed: 70000, organic: 30, reachScale: 1,
+      channels: {
+        meta: ch(5.48, 'M', 0.0169, 'P'),
+        google: ch(10.61, 'M', 0.0311, 'D'),
+        criteo: ch(15.96, 'L', 0.038, 'L'),
+        sklik: ch(4.62, 'M', 0.0311, 'P'),
+        heureka: ch(7.94, 'L', 0.03, 'L')
+      }
+    },
+    electronics: {
+      name: 'Electronics e-shop', sector: 'Consumer electronics online', eshop: true, unit: 'orders',
+      aov: 3800, margin: 0.12, fixed: 70000, organic: 30, reachScale: 1,
+      channels: {
+        meta: ch(11.74, 'D', 0.012, 'M'),
+        google: ch(10.61, 'M', 0.0311, 'D'),
+        criteo: ch(15.96, 'L', 0.038, 'L'),
+        sklik: ch(4.62, 'M', 0.0311, 'P'),
+        heureka: ch(7.22, 'L', 0.03, 'L')
+      }
+    },
+    trades: {
+      name: 'Local trades business', sector: 'Plumber, electrician or similar service', eshop: false, unit: 'jobs',
+      aov: 6000, margin: 0.35, fixed: 80000, organic: 15, reachScale: 0.1,
+      channels: {
+        meta: ch(23.82, 'M', 0.0169, 'P'),
+        google: ch(10.61, 'M', 0.0311, 'P'),
+        sklik: ch(4.62, 'M', 0.0311, 'P')
+      }
+    }
+  };
+
+  /* Monthly market events. Each one names the channels it changes. */
+  var EVENTS = [
+    { id: 'meta-crowd', title: 'Meta auctions get crowded', text: 'Meta cost per click rises 20% this month.', cpc: { meta: 1.2 } },
+    { id: 'google-surge', title: 'Competitors bid up search', text: 'Google Ads cost per click rises 25% this month.', cpc: { google: 1.25 } },
+    { id: 'heureka-list', title: 'Heureka updates its price list', text: 'Heureka cost per click rises 5% this month.', cpc: { heureka: 1.05 } },
+    { id: 'retarget-small', title: 'The retargeting pool shrinks', text: 'Criteo reach falls 30% this month.', reach: { criteo: 0.7 } },
+    { id: 'seznam-dip', title: 'Seznam traffic dips', text: 'Sklik reach falls 20% this month.', reach: { sklik: 0.8 } },
+    { id: 'viral', title: 'A customer posts about you', text: 'Organic sales get a bonus of 15 orders this month.', organic: 15 }
+  ];
+
+  /* ---------- Helpers ---------- */
+  var app = document.getElementById('app');
+  var tabPlay = document.getElementById('tab-play');
+  var tabBench = document.getElementById('tab-bench');
+  var view = 'setup';
+  var G = null; // current game
+
+  function channelDef(id) {
+    for (var i = 0; i < CHANNELS.length; i++) if (CHANNELS[i].id === id) return CHANNELS[i];
+    return null;
+  }
+  function isAvailable(profileId, id) {
+    return !!PROFILES[profileId].channels[id];
+  }
+  function availableChannels(profileId) {
+    return CHANNELS.map(function (c) { return c.id; }).filter(function (id) { return isAvailable(profileId, id); });
+  }
+  function unavailableReason(id) {
+    return id === 'heureka'
+      ? 'Heureka lists products from an online shop, so it does not fit a service business.'
+      : 'Criteo retargets people who visited an online shop, so it does not fit a service business.';
+  }
+  function kc(n, signed) {
+    var r = Math.round(n);
+    var s = Math.abs(r).toLocaleString('en-GB') + ' Kč';
+    if (r < 0) return '−' + s;
+    if (signed && r > 0) return '+' + s;
+    return s;
+  }
+  function num(n) { return Math.round(n).toLocaleString('en-GB'); }
+  function cpcFmt(n) { return (Math.round(n * 100) / 100).toFixed(2) + ' Kč'; }
+  function pct(x) { return (x * 100).toFixed(1) + '%'; }
+  function xFmt(x) { return (x === null || x === undefined || !isFinite(x)) ? '–' : x.toFixed(2) + '×'; }
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function loadBest() {
+    try { return JSON.parse(window.localStorage.getItem(BEST_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveBest(profileId, profit) {
+    try {
+      var b = loadBest();
+      if (b[profileId] === undefined || profit > b[profileId]) {
+        b[profileId] = Math.round(profit);
+        window.localStorage.setItem(BEST_KEY, JSON.stringify(b));
+      }
+    } catch (e) { /* storage blocked: the score is simply not kept */ }
+  }
+
+  /* ---------- Time ---------- */
+  function monthDate(g, i) { return new Date(g.startYear, g.startMonth + i, 1); }
+  function monthLabel(g, i) { return monthDate(g, i).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }); }
+  function calMonth(g, i) { return monthDate(g, i).getMonth(); }
+
+  /* ---------- Market model ---------- */
+  function multipliers(id, calM, ev) {
+    var cpc = 1, reach = 1;
+    if (id === 'heureka' && HEUREKA_UPLIFT_MONTHS.indexOf(calM) !== -1) cpc *= HEUREKA_UPLIFT;
+    if (ev && ev.cpc && ev.cpc[id]) cpc *= ev.cpc[id];
+    if (ev && ev.reach && ev.reach[id]) reach *= ev.reach[id];
+    return { cpc: cpc, reach: reach };
+  }
+
+  /* Clicks saturate: clicks = reach × (1 − e^(−spend / (cpc × reach))).
+     The first koruna buys 1 / cpc clicks. Clicks approach the reach ceiling as spend grows. */
+  function computeMonth(g, spend, rng) {
+    var p = PROFILES[g.profile];
+    var cal = calMonth(g, g.month);
+    var ev = g.event;
+    var noisy = typeof rng === 'function';
+    function jit() { return 1 - NOISE + 2 * NOISE * rng(); }
+
+    var rows = availableChannels(g.profile).map(function (id) {
+      var def = channelDef(id);
+      var base = p.channels[id];
+      var s = Number(spend[id]) || 0;
+      var m = multipliers(id, cal, ev);
+      var cpc = base.cpc * m.cpc;
+      var reach = def.reach * p.reachScale * m.reach;
+      var clicksExp = s > 0 ? reach * (1 - Math.exp(-s / (cpc * reach))) : 0;
+      var used = clicksExp / reach;
+      var marginal = s > 0 ? cpc * Math.exp(s / (cpc * reach)) : cpc; // cost of the next click
+      var clicks = clicksExp;
+      if (noisy) clicks = Math.round(clicks * jit());
+      var orders = clicks * base.cvr;
+      if (noisy) orders = Math.round(orders * jit());
+      var revenue = orders * p.aov;
+      var gross = revenue * p.margin;
+      return {
+        id: id, name: def.name, color: def.color, spend: s,
+        cpc: cpc, cpcBase: base.cpc, cpcChange: m.cpc, reach: reach, used: used, marginal: marginal,
+        clicks: clicks, cvr: base.cvr, qc: base.qc, qv: base.qv,
+        orders: orders, revenue: revenue, gross: gross,
+        profit: gross - s,
+        roas: s > 0 ? revenue / s : null
+      };
+    });
+
+    var orgOrders = p.organic + (ev && ev.organic ? ev.organic : 0);
+    if (noisy) orgOrders = Math.round(orgOrders * jit());
+    var orgRevenue = orgOrders * p.aov;
+    var orgGross = orgRevenue * p.margin;
+
+    var totals = { spend: 0, paidRevenue: 0, revenue: 0, orders: 0, gross: 0, fixed: p.fixed };
+    rows.forEach(function (r) {
+      totals.spend += r.spend;
+      totals.paidRevenue += r.revenue;
+      totals.orders += r.orders;
+      totals.gross += r.gross;
+    });
+    totals.orders += orgOrders;
+    totals.revenue = totals.paidRevenue + orgRevenue;
+    totals.gross += orgGross;
+    totals.net = totals.gross - totals.spend - totals.fixed;
+    totals.cashBefore = g.cash;
+    totals.cashAfter = g.cash + totals.net;
+
+    return {
+      month: g.month, label: monthLabel(g, g.month), calM: cal, event: ev, rows: rows,
+      organic: { orders: orgOrders, revenue: orgRevenue, gross: orgGross },
+      totals: totals
+    };
+  }
+
+  /* Profit-maximising monthly budget for one channel, ignoring events and seasonality.
+     Setting d(profit)/d(spend) = 0 gives spend = reach × cpc × ln(maxCpc / cpc),
+     where maxCpc is the gross profit one click earns (cvr × order value × margin). */
+  function idealFor(profileId, id) {
+    var p = PROFILES[profileId];
+    var b = p.channels[id];
+    var reach = channelDef(id).reach * p.reachScale;
+    var maxCpc = b.cvr * p.aov * p.margin;
+    if (maxCpc <= b.cpc) return { spend: 0, clicks: 0, profit: 0 };
+    var spend = Math.round(reach * b.cpc * Math.log(maxCpc / b.cpc) / STEP) * STEP;
+    var clicks = reach * (1 - Math.exp(-spend / (b.cpc * reach)));
+    return { spend: spend, clicks: clicks, profit: clicks * maxCpc - spend };
+  }
+
+  /* ---------- Game flow ---------- */
+  function budgetCap(g) {
+    return Math.max(0, Math.floor((g.cash - PROFILES[g.profile].fixed) / STEP) * STEP);
+  }
+  function totalSpend(g) {
+    return availableChannels(g.profile).reduce(function (sum, id) { return sum + (g.spend[id] || 0); }, 0);
+  }
+  function clampSpend(g) {
+    var cap = budgetCap(g);
+    var ids = availableChannels(g.profile);
+    while (totalSpend(g) > cap) {
+      var top = ids[0];
+      ids.forEach(function (id) { if ((g.spend[id] || 0) > (g.spend[top] || 0)) top = id; });
+      g.spend[top] -= STEP;
+    }
+  }
+  function eventApplies(ev, p) {
+    var ok = true;
+    Object.keys(ev.cpc || {}).forEach(function (k) { if (!p.channels[k]) ok = false; });
+    Object.keys(ev.reach || {}).forEach(function (k) { if (!p.channels[k]) ok = false; });
+    return ok;
+  }
+  function rollEvent(g) {
+    if (g.rng() >= EVENT_CHANCE) return null;
+    var p = PROFILES[g.profile];
+    var pool = EVENTS.filter(function (e) { return eventApplies(e, p); });
+    return pool[Math.floor(g.rng() * pool.length)];
+  }
+  function beginMonth(g) {
+    g.event = rollEvent(g);
+    clampSpend(g);
+  }
+  function zeroSpend(profileId) {
+    var s = {};
+    availableChannels(profileId).forEach(function (id) { s[id] = 0; });
+    return s;
+  }
+
+  function startGame(profileId, opts) {
+    opts = opts || {};
+    var now = new Date();
+    var seed = opts.seed !== undefined ? opts.seed : Math.floor(Math.random() * 4294967296);
+    G = {
+      profile: profileId,
+      startYear: opts.year !== undefined ? opts.year : now.getFullYear(),
+      startMonth: opts.month !== undefined ? opts.month : now.getMonth(),
+      month: 0,
+      cash: START_CASH,
+      startCash: START_CASH,
+      spend: zeroSpend(profileId),
+      event: null,
+      rng: mulberry32(seed),
+      history: [],
+      report: null,
+      bankrupt: false,
+      screen: 'play'
+    };
+    beginMonth(G);
+    go('play');
+  }
+
+  function setSpend(id, raw) {
+    var cap = budgetCap(G);
+    var others = totalSpend(G) - (G.spend[id] || 0);
+    var v = Math.round((Number(raw) || 0) / STEP) * STEP;
+    G.spend[id] = Math.max(0, Math.min(v, cap - others));
+  }
+  function spreadEvenly() {
+    var ids = availableChannels(G.profile);
+    var each = Math.floor(budgetCap(G) / ids.length / STEP) * STEP;
+    ids.forEach(function (id) { G.spend[id] = each; });
+    clampSpend(G);
+    updatePlay();
+  }
+  function clearSpend() {
+    G.spend = zeroSpend(G.profile);
+    updatePlay();
+  }
+  function runMonth() {
+    if (!G || G.screen !== 'play') return;
+    var rep = computeMonth(G, G.spend, G.rng);
+    G.cash = rep.totals.cashAfter;
+    G.history.push(rep);
+    G.report = rep;
+    G.bankrupt = G.month < MONTHS - 1 && G.cash < PROFILES[G.profile].fixed;
+    go('report');
+  }
+  function nextMonth() {
+    if (!G) return;
+    if (G.bankrupt) { go('bankrupt'); return; }
+    if (G.month >= MONTHS - 1) {
+      saveBest(G.profile, G.cash - G.startCash);
+      go('final');
+      return;
+    }
+    G.month += 1;
+    beginMonth(G);
+    go('play');
+  }
+
+  /* ---------- Navigation ---------- */
+  function go(name) {
+    view = name;
+    if (G && ['play', 'report', 'final', 'bankrupt'].indexOf(name) !== -1) G.screen = name;
+    render();
+    window.scrollTo(0, 0);
+  }
+  function render() {
+    var map = {
+      setup: renderSetup, play: renderPlay, report: renderReport,
+      final: renderFinal, bankrupt: renderBankrupt, bench: renderBench
+    };
+    (map[view] || renderSetup)();
+    tabPlay.setAttribute('aria-pressed', String(view !== 'bench'));
+    tabBench.setAttribute('aria-pressed', String(view === 'bench'));
+  }
+
+  /* ---------- Views ---------- */
+  function renderSetup() {
+    var best = loadBest();
+    var cards = Object.keys(PROFILES).map(function (id) {
+      var p = PROFILES[id];
+      var chips = availableChannels(id).map(function (cid) {
+        return '<span class="chip" style="--c:' + channelDef(cid).color + '">' + channelDef(cid).name + '</span>';
+      }).join('');
+      var bestTxt = best[id] !== undefined ? kc(best[id]) : '–';
+      return '<article class="card profile">' +
+        '<h3>' + p.name + '</h3>' +
+        '<p class="small muted">' + p.sector + '</p>' +
+        '<dl class="facts">' +
+          '<dt>' + (p.unit === 'jobs' ? 'Average job' : 'Average order') + '</dt><dd>' + kc(p.aov) + '</dd>' +
+          '<dt>Gross margin</dt><dd>' + Math.round(p.margin * 100) + '%</dd>' +
+          '<dt>Break-even ROAS</dt><dd>' + xFmt(1 / p.margin) + '</dd>' +
+          '<dt>Fixed costs a month</dt><dd>' + kc(p.fixed) + '</dd>' +
+          '<dt>Organic ' + p.unit + ' a month</dt><dd>' + p.organic + '</dd>' +
+          '<dt>Best profit so far</dt><dd>' + bestTxt + '</dd>' +
+        '</dl>' +
+        '<div class="chips">' + chips + '</div>' +
+        '<button class="btn" type="button" data-action="start" data-profile="' + id + '">Start with this business</button>' +
+      '</article>';
+    }).join('');
+
+    app.innerHTML =
+      '<h2>Choose your business</h2>' +
+      '<p class="intro">Each business has its own order value, margin and cost per click, taken from the benchmarks in the Benchmarks and sources tab. Every month you split the ad budget across the channels that fit. You start with ' + kc(START_CASH) + ' and have 12 months to build the most cash.</p>' +
+      '<div class="profiles">' + cards + '</div>' +
+      '<p class="small muted">Break-even ROAS is 1 ÷ gross margin. A channel earns its keep only when each koruna of ad spend brings back at least that much revenue.</p>';
+  }
+
+  function channelRow(g, id) {
+    var def = channelDef(id);
+    var p = PROFILES[g.profile];
+    var b = p.channels[id];
+    var m = multipliers(id, calMonth(g, g.month), g.event);
+    var cpc = b.cpc * m.cpc;
+    var reach = def.reach * p.reachScale * m.reach;
+    var val = g.spend[id] || 0;
+    return '<div class="chan" style="--c:' + def.color + '" data-row="' + id + '">' +
+      '<div class="chan-head"><span class="dot" aria-hidden="true"></span><strong>' + def.name + '</strong>' +
+      '<span class="meta">' + cpcFmt(cpc) + ' a click · up to ' + num(reach) + ' a month</span></div>' +
+      '<p class="small muted">' + def.desc + '</p>' +
+      '<div class="controls">' +
+        '<input type="range" min="0" step="' + STEP + '" value="' + val + '" aria-label="' + def.name + ' budget" data-ch="' + id + '" data-kind="range">' +
+        '<input type="number" min="0" step="' + STEP + '" value="' + val + '" aria-label="' + def.name + ' budget in Kč" data-ch="' + id + '" data-kind="num">' +
+      '</div>' +
+      '<div class="fc" data-fc="' + id + '"></div>' +
+    '</div>';
+  }
+
+  function renderPlay() {
+    var p = PROFILES[G.profile];
+    var ev = G.event;
+    var cal = calMonth(G, G.month);
+    var upliftNote = (p.channels.heureka && HEUREKA_UPLIFT_MONTHS.indexOf(cal) !== -1)
+      ? '<p class="small muted" style="margin-top:6px">Heureka raises clicks 25% in November to January, so Heureka costs more this month.</p>' : '';
+    var eventHtml = ev
+      ? '<p><strong>' + ev.title + '.</strong> ' + ev.text + '</p>'
+      : '<p>No market event this month. Prices follow the normal benchmarks.</p>';
+    var rows = availableChannels(G.profile).map(function (id) { return channelRow(G, id); });
+    var unavailable = CHANNELS.filter(function (c) { return !isAvailable(G.profile, c.id); }).map(function (c) {
+      return '<div class="chan off" style="--c:' + c.color + '"><div class="chan-head"><span class="dot" aria-hidden="true"></span><strong>' + c.name + '</strong><span class="meta">not available</span></div><p class="small">' + unavailableReason(c.id) + '</p></div>';
+    }).join('');
+
+    app.innerHTML =
+      '<div class="play-head"><h2>' + p.name + ': month ' + (G.month + 1) + ' of ' + MONTHS + '</h2><p class="muted small">' + G.history.length + ' months played · ' + monthLabel(G, G.month) + '</p></div>' +
+      '<div class="card event"><span class="tag">This month</span><div>' + eventHtml + upliftNote + '</div></div>' +
+      '<div class="status">' +
+        '<div class="stat"><div class="k">Cash now</div><div class="v">' + kc(G.cash) + '</div></div>' +
+        '<div class="stat"><div class="k">Fixed costs a month</div><div class="v">' + kc(p.fixed) + '</div></div>' +
+        '<div class="stat"><div class="k">You can spend</div><div class="v" data-role="cap">' + kc(budgetCap(G)) + '</div></div>' +
+        '<div class="stat"><div class="k">Profit so far</div><div class="v ' + (G.cash - G.startCash >= 0 ? 'good' : 'bad') + '">' + kc(G.cash - G.startCash, true) + '</div></div>' +
+      '</div>' +
+      '<div class="play">' +
+        '<section class="card" aria-label="Channel budgets">' +
+          '<div class="channels-head"><h3>Ad budget for this month</h3>' +
+          '<div class="actions" style="margin:0"><button class="btn ghost small-btn" type="button" data-action="spread">Spread evenly</button><button class="btn ghost small-btn" type="button" data-action="clear">Clear</button></div></div>' +
+          rows.join('') + unavailable +
+        '</section>' +
+        '<aside class="card fc-panel" id="fc-panel" aria-label="Forecast"></aside>' +
+      '</div>';
+    updatePlay();
+  }
+
+  /* Updates budget limits, numbers and the forecast without rebuilding inputs, so focus is kept. */
+  function updatePlay() {
+    if (!G || view !== 'play') return;
+    var p = PROFILES[G.profile];
+    var plan = computeMonth(G, G.spend);
+    var cap = budgetCap(G);
+    var used = totalSpend(G);
+    var be = 1 / p.margin;
+
+    availableChannels(G.profile).forEach(function (id) {
+      var v = G.spend[id] || 0;
+      var max = cap - (used - v);
+      var range = app.querySelector('input[type="range"][data-ch="' + id + '"]');
+      var numIn = app.querySelector('input[type="number"][data-ch="' + id + '"]');
+      if (range) { range.max = max; if (document.activeElement !== range) range.value = v; }
+      if (numIn) { numIn.max = max; if (document.activeElement !== numIn) numIn.value = v; }
+      var r = plan.rows.filter(function (x) { return x.id === id; })[0];
+      var fc = app.querySelector('[data-fc="' + id + '"]');
+      if (!fc || !r) return;
+      if (v <= 0) {
+        fc.textContent = 'No budget set. This channel adds nothing this month.';
+      } else {
+        fc.textContent = 'Forecast: ' + num(r.clicks) + ' clicks, ' + num(r.orders) + ' ' + p.unit +
+          ', revenue ' + kc(r.revenue) + ', ROAS ' + xFmt(r.roas) + ' (' +
+          (r.roas >= be ? 'above' : 'below') + ' break-even of ' + xFmt(be) + ').';
+      }
+    });
+
+    var t = plan.totals;
+    var paidRoas = t.spend > 0 ? t.paidRevenue / t.spend : null;
+    var panel = document.getElementById('fc-panel');
+    if (!panel) return;
+    panel.innerHTML =
+      '<h3>Forecast</h3>' +
+      '<p class="fc-note">Average outcome. Real months can land up to about 15% above or below it.</p>' +
+      '<div class="fc-row"><span>Ad spend</span><span>' + kc(t.spend) + '</span></div>' +
+      '<div class="fc-row"><span>Orders, paid and organic</span><span>' + num(t.orders) + '</span></div>' +
+      '<div class="fc-row"><span>Revenue</span><span>' + kc(t.revenue) + '</span></div>' +
+      '<div class="fc-row"><span>Gross profit</span><span>' + kc(t.gross) + '</span></div>' +
+      '<div class="fc-row"><span>Fixed costs</span><span>' + kc(-p.fixed) + '</span></div>' +
+      '<div class="fc-row total"><span>Profit this month</span><span class="' + (t.net >= 0 ? 'good' : 'bad') + '">' + kc(t.net, true) + '</span></div>' +
+      '<div class="fc-row"><span>Cash after month</span><span>' + kc(t.cashAfter) + '</span></div>' +
+      '<div class="fc-row"><span>Paid ROAS</span><span>' + xFmt(paidRoas) + '</span></div>' +
+      '<div class="fc-row"><span>Break-even ROAS</span><span>' + xFmt(be) + '</span></div>' +
+      '<div class="actions"><button class="btn" type="button" data-action="run" style="width:100%">Run ' + monthLabel(G, G.month) + '</button></div>' +
+      '<p class="fc-limit">You can spend up to ' + kc(cap) + ' this month: cash on hand minus fixed costs.</p>';
+  }
+
+  function monthInsights(g, rep) {
+    var out = [];
+    var p = PROFILES[g.profile];
+    var be = 1 / p.margin;
+    if (rep.event) out.push(rep.event.title + '. ' + rep.event.text);
+    if (p.channels.heureka && HEUREKA_UPLIFT_MONTHS.indexOf(rep.calM) !== -1) {
+      out.push('Heureka\'s seasonal price rise applied: each click cost 25% more than usual.');
+    }
+    rep.rows.forEach(function (r) {
+      if (r.spend <= 0) return;
+      if (r.roas < be) {
+        out.push(r.name + ' lost money. ROAS ' + xFmt(r.roas) + ' was below the break-even of ' + xFmt(be) + '.');
+      }
+      if (r.used >= 0.5) {
+        out.push(r.name + ' has used ' + pct(r.used) + ' of the clicks it can reach. Its next click costs about ' + cpcFmt(r.marginal) + ', against a base price of ' + cpcFmt(r.cpc) + '.');
+      }
+    });
+    var active = rep.rows.filter(function (r) { return r.spend > 0; });
+    if (!active.length) {
+      out.push('No ad spend this month. Sales came only from organic traffic, which may not cover fixed costs.');
+    } else {
+      var best = active.slice().sort(function (a, b) { return b.profit - a.profit; })[0];
+      out.push('Strongest channel: ' + best.name + ', with a profit of ' + kc(best.profit) + ' after its ad spend.');
+    }
+    if (rep.totals.net < 0) out.push('The month closed with a loss of ' + kc(-rep.totals.net) + ' after fixed costs.');
+    return out.slice(0, 6);
+  }
+
+  function renderReport() {
+    var rep = G.report;
+    var p = PROFILES[G.profile];
+    var last = G.month >= MONTHS - 1;
+    var rows = rep.rows.map(function (r) {
+      var has = r.spend > 0;
+      var verdict = !has ? '<span class="pill">No spend</span>'
+        : (r.profit >= 0 ? '<span class="pill good">Profitable</span>' : '<span class="pill bad">Loss</span>');
+      return '<tr>' +
+        '<td><span class="dot" style="--c:' + r.color + '"></span> ' + r.name + '</td>' +
+        '<td>' + kc(r.spend) + '</td>' +
+        '<td>' + (has ? num(r.clicks) : '–') + '</td>' +
+        '<td>' + (has && r.clicks >= 1 ? cpcFmt(r.spend / r.clicks) : '–') + '</td>' +
+        '<td>' + (has && isFinite(r.marginal) ? cpcFmt(r.marginal) : '–') + '</td>' +
+        '<td>' + (has ? pct(r.used) : '–') + '</td>' +
+        '<td>' + num(r.orders) + '</td>' +
+        '<td>' + kc(r.revenue) + '</td>' +
+        '<td>' + xFmt(r.roas) + '</td>' +
+        '<td class="' + (r.profit >= 0 ? 'good' : 'bad') + '">' + (has ? kc(r.profit, true) : '–') + '</td>' +
+        '<td>' + verdict + '</td>' +
+      '</tr>';
+    }).join('');
+    var org = rep.organic;
+    var t = rep.totals;
+
+    var eventHtml = rep.event
+      ? '<div class="card event"><span class="tag">Event</span><div><strong>' + rep.event.title + '.</strong> ' + rep.event.text + '</div></div>' : '';
+    var warn = G.bankrupt
+      ? '<div class="callout"><strong>Cash is below your fixed costs.</strong> Next month the business cannot pay its bills, so it closes.</div>' : '';
+    var btn = G.bankrupt ? 'See result' : (last ? 'See year-end result' : 'Start next month');
+
+    app.innerHTML =
+      '<div class="play-head"><h2>' + p.name + ': ' + rep.label + ' results</h2><p class="muted small">Month ' + (rep.month + 1) + ' of ' + MONTHS + '</p></div>' +
+      eventHtml + warn +
+      '<div class="table-wrap"><table>' +
+        '<thead><tr><th>Channel</th><th>Spend</th><th>Clicks</th><th>Cost per click</th><th>Next click costs</th><th>Reach used</th><th>' + (p.unit === 'jobs' ? 'Jobs' : 'Orders') + '</th><th>Revenue</th><th>ROAS</th><th>Profit*</th><th>Verdict</th></tr></thead>' +
+        '<tbody>' + rows +
+          '<tr><td>Organic (no ad cost)</td><td>–</td><td>–</td><td>–</td><td>–</td><td>–</td><td>' + num(org.orders) + '</td><td>' + kc(org.revenue) + '</td><td>–</td><td class="' + (org.gross >= 0 ? 'good' : 'bad') + '">' + kc(org.gross, true) + '</td><td></td></tr>' +
+        '</tbody>' +
+        '<tfoot><tr><td>Total</td><td>' + kc(t.spend) + '</td><td></td><td></td><td></td><td></td><td>' + num(t.orders) + '</td><td>' + kc(t.revenue) + '</td><td>' + xFmt(t.spend > 0 ? t.paidRevenue / t.spend : null) + '</td><td class="' + (t.gross - t.spend >= 0 ? 'good' : 'bad') + '">' + kc(t.gross - t.spend, true) + '</td><td></td></tr></tfoot>' +
+      '</table></div>' +
+      '<p class="small muted">*Profit is gross profit minus ad spend, before fixed costs. "Next click costs" is the price of one more click at the current spend.</p>' +
+      '<div class="grid2" style="margin-top:16px">' +
+        '<section class="card"><h3>Cash this month</h3><div class="cash-rows">' +
+          '<div><span>Cash at start of month</span><span>' + kc(t.cashBefore) + '</span></div>' +
+          '<div><span>Gross profit from sales</span><span>' + kc(t.gross) + '</span></div>' +
+          '<div><span>Ad spend</span><span>' + kc(-t.spend) + '</span></div>' +
+          '<div><span>Fixed costs</span><span>' + kc(-t.fixed) + '</span></div>' +
+          '<div class="total"><span>Cash at end of month</span><span>' + kc(t.cashAfter) + '</span></div>' +
+        '</div></section>' +
+        '<section class="card"><h3>What happened</h3><ul>' +
+          monthInsights(G, rep).map(function (s) { return '<li>' + s + '</li>'; }).join('') +
+        '</ul></section>' +
+      '</div>' +
+      '<div class="actions"><button class="btn" type="button" data-action="next">' + btn + '</button></div>';
+  }
+
+  function renderFinal() {
+    var p = PROFILES[G.profile];
+    var profit = G.cash - G.startCash;
+    var months = G.history.length;
+    var paid = {};
+    availableChannels(G.profile).forEach(function (id) { paid[id] = { spend: 0, profit: 0 }; });
+    var organic = 0;
+    var best = null;
+    G.history.forEach(function (rep) {
+      rep.rows.forEach(function (r) { paid[r.id].spend += r.spend; paid[r.id].profit += r.profit; });
+      organic += rep.organic.gross;
+      if (best === null || rep.totals.net > best.net) best = { label: rep.label, net: rep.totals.net };
+    });
+    var fixedTotal = p.fixed * months;
+
+    var bars = availableChannels(G.profile).map(function (id) {
+      var d = channelDef(id);
+      return { label: d.name, value: paid[id].profit, color: d.color };
+    });
+    bars.push({ label: 'Organic sales, gross profit', value: organic, color: 'var(--muted)' });
+    bars.push({ label: 'Fixed costs', value: -fixedTotal, color: 'var(--muted)' });
+    var maxAbs = Math.max.apply(null, bars.map(function (b) { return Math.abs(b.value); }).concat([1]));
+    var barHtml = bars.map(function (b) {
+      var w = Math.abs(b.value) / maxAbs * 50;
+      var left = b.value >= 0 ? 50 : 50 - w;
+      return '<div class="bar-row"><span>' + b.label + '</span>' +
+        '<div class="track" role="presentation"><div class="fill" style="--c:' + b.color + ';left:' + left + '%;width:' + w + '%"></div></div>' +
+        '<span class="' + (b.value >= 0 ? 'good' : 'bad') + '">' + kc(b.value, true) + '</span></div>';
+    }).join('');
+
+    var idealTotal = 0;
+    var benchRows = availableChannels(G.profile).map(function (id) {
+      var ideal = idealFor(G.profile, id);
+      idealTotal += ideal.profit;
+      var avgSpend = months ? paid[id].spend / months : 0;
+      var avgProfit = months ? paid[id].profit / months : 0;
+      return '<tr><td>' + channelDef(id).name + '</td><td>' + kc(avgSpend) + '</td><td class="' + (avgProfit >= 0 ? 'good' : 'bad') + '">' + kc(avgProfit, true) + '</td><td>' + kc(ideal.spend) + '</td><td class="good">' + kc(ideal.profit, true) + '</td></tr>';
+    }).join('');
+    var yourPaid = 0;
+    availableChannels(G.profile).forEach(function (id) { yourPaid += paid[id].profit; });
+    var yourPaidPerMonth = months ? yourPaid / months : 0;
+
+    var strongest = null, weakest = null;
+    availableChannels(G.profile).forEach(function (id) {
+      if (paid[id].spend <= 0) return;
+      if (!strongest || paid[id].profit > paid[strongest].profit) strongest = id;
+      if (!weakest || paid[id].profit < paid[weakest].profit) weakest = id;
+    });
+
+    var lessons = [];
+    lessons.push('Compare ROAS with break-even, not with 1×. For this business each koruna of ad spend must bring back at least ' + xFmt(1 / p.margin) + ' in revenue before it pays for itself.');
+    lessons.push('Channels saturate. Once a channel has used half of the people it can reach, each extra click costs twice its base price. Spreading the budget across channels keeps costs down.');
+    lessons.push('Facebook clicks cost 5.48 Kč in home decor and 23.82 Kč for local trades (ViVa, Feb 2025). The same platform can be a bargain or a loss depending on the business.');
+    if (p.channels.criteo) {
+      lessons.push('Retargeting looks efficient in reports, but some of its orders would have come anyway. A third-party roundup estimates that up to 75% of retargeting conversions may not be incremental.');
+    }
+    if (p.channels.heureka) {
+      lessons.push('Heureka sets its price by category and product price, and raises clicks about 25% from November to January. Plan that season separately.');
+    }
+    if (strongest) {
+      lessons.push('Your strongest channel was ' + channelDef(strongest).name + ', with a profit of ' + kc(paid[strongest].profit, true) + ' over the year.');
+    }
+    if (weakest && weakest !== strongest) {
+      lessons.push('Your weakest channel was ' + channelDef(weakest).name + ', with a profit of ' + kc(paid[weakest].profit, true) + '. Compare its ROAS with break-even month by month to see where it fell short.');
+    }
+    if (p.channels.meta && G.history.length && paid.meta && paid.meta.spend > 0 && p.channels.meta.cvr * p.aov * p.margin < p.channels.meta.cpc) {
+      lessons.push('Meta cost more per click than each click returns in gross profit for this business, so every koruna there lost money.');
+    }
+
+    app.innerHTML =
+      '<div class="play-head"><h2>Year end: ' + p.name + '</h2><p class="muted small">' + months + ' months played, starting ' + monthLabel(G, 0) + '</p></div>' +
+      '<p class="rating">' + rating(profit) + '</p>' +
+      '<div class="status">' +
+        '<div class="stat"><div class="k">Final cash</div><div class="v">' + kc(G.cash) + '</div></div>' +
+        '<div class="stat"><div class="k">Profit for the year</div><div class="v ' + (profit >= 0 ? 'good' : 'bad') + '">' + kc(profit, true) + '</div></div>' +
+        '<div class="stat"><div class="k">Return on starting cash</div><div class="v">' + (profit / START_CASH * 100).toFixed(1) + '%</div></div>' +
+        '<div class="stat"><div class="k">Best month</div><div class="v">' + (best ? best.label + ': ' + kc(best.net, true) : '–') + '</div></div>' +
+      '</div>' +
+      '<section class="card" style="margin-top:16px"><h3>Where the profit came from</h3><p class="small muted">Each bar shows a channel\'s profit after its own ad spend, summed over the year. Fixed costs are shown as a negative bar.</p><div class="bars">' + barHtml + '</div></section>' +
+      '<section class="card" style="margin-top:16px"><h3>Ideal budget check</h3><p class="small muted">The ideal budget spends until the last koruna earns exactly its own cost back in gross profit. It ignores events and seasonality. All values are per month.</p>' +
+        '<div class="table-wrap" style="margin:0 0 10px"><table style="min-width:560px"><thead><tr><th>Channel</th><th>Your avg spend</th><th>Your avg profit</th><th>Ideal spend</th><th>Ideal profit</th></tr></thead><tbody>' + benchRows + '</tbody></table></div>' +
+        '<p class="small">Your paid channels earned about <strong>' + kc(yourPaidPerMonth, true) + '</strong> a month. The ideal plan earns about <strong>' + kc(idealTotal, true) + '</strong>.</p>' +
+      '</section>' +
+      '<section class="card" style="margin-top:16px"><h3>Lessons from the data</h3><ul class="lessons">' +
+        lessons.map(function (s) { return '<li>' + s + '</li>'; }).join('') +
+      '</ul></section>' +
+      '<div class="actions"><button class="btn" type="button" data-action="again">Play this business again</button><button class="btn ghost" type="button" data-action="pick">Choose another business</button><button class="btn ghost" type="button" data-action="bench">Open benchmarks</button></div>';
+  }
+
+  function rating(profit) {
+    if (profit < 0) return 'Cash burned';
+    if (profit < 100000) return 'Stayed afloat';
+    if (profit < 250000) return 'Profitable operator';
+    return 'Growth machine';
+  }
+
+  function renderBankrupt() {
+    var p = PROFILES[G.profile];
+    app.innerHTML =
+      '<section class="card narrow"><h2>The business ran out of cash</h2>' +
+      '<p>After month ' + (G.history.length) + ' (' + monthLabel(G, G.month) + ') cash was ' + kc(G.cash) + ', less than the ' + kc(p.fixed) + ' in fixed costs due each month. The business cannot pay its bills and closes.</p>' +
+      '<p class="muted">Before you spend again, check each channel against break-even ROAS, and stop spending where it loses money.</p>' +
+      '<div class="actions"><button class="btn" type="button" data-action="again">Try this business again</button><button class="btn ghost" type="button" data-action="pick">Choose another business</button></div></section>';
+  }
+
+  function sourceItem(name, url, text) {
+    return '<li><strong>' + name + '</strong>' + (url ? ' · <a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>' : '') + '<br><span class="small muted">' + text + '</span></li>';
+  }
+
+  function renderBench() {
+    var profileRows = Object.keys(PROFILES).map(function (id) {
+      var p = PROFILES[id];
+      return '<tr><td>' + p.name + '</td><td>' + kc(p.aov) + '</td><td>' + Math.round(p.margin * 100) + '%</td><td>' + xFmt(1 / p.margin) + '</td><td>' + kc(p.fixed) + '</td><td>' + p.organic + '</td><td>' + (p.reachScale === 1 ? 'Online shop' : 'Local area (smaller reach)') + '</td></tr>';
+    }).join('');
+
+    var inputRows = '';
+    Object.keys(PROFILES).forEach(function (id) {
+      var p = PROFILES[id];
+      availableChannels(id).forEach(function (cid) {
+        var b = p.channels[cid];
+        var maxCpc = b.cvr * p.aov * p.margin;
+        inputRows += '<tr><td>' + p.name + '</td><td><span class="dot" style="--c:' + channelDef(cid).color + '"></span> ' + channelDef(cid).name + '</td>' +
+          '<td>' + cpcFmt(b.cpc) + '</td><td>' + pct(b.cvr) + '</td><td>' + cpcFmt(maxCpc) + '</td>' +
+          '<td><abbr title="Click cost: ' + qualityName(b.qc) + '">' + b.qc + '</abbr> / <abbr title="Conversion rate: ' + qualityName(b.qv) + '">' + b.qv + '</abbr></td></tr>';
+      });
+    });
+
+    var channelRows = CHANNELS.map(function (c) {
+      return '<tr><td><span class="dot" style="--c:' + c.color + '"></span> ' + c.name + '</td><td class="wrap-cell">' + c.desc + '</td><td>' + num(c.reach) + '</td><td class="wrap-cell">' + (c.eshopOnly ? 'Online shops only' : 'Online shops and local businesses') + '</td></tr>';
+    }).join('');
+
+    app.innerHTML =
+      '<h2>Benchmarks and sources</h2>' +
+      '<p class="intro">Every number the game uses is listed here, with where it came from and how sure we are. The game has no hidden values.</p>' +
+
+      '<section class="bench-block"><h3>How one month works</h3><ul>' +
+        '<li>You set a budget for each channel. Clicks follow a saturation curve: the first clicks are cheap, and each extra click costs more as the channel runs out of people to reach.</li>' +
+        '<li>Orders = clicks × conversion rate. Revenue = orders × order value. Gross profit = revenue × gross margin.</li>' +
+        '<li>Profit = gross profit − ad spend − fixed costs. Cash moves by that profit each month.</li>' +
+        '<li>Each month may bring one market event. Results vary by up to about ±15% around the average.</li>' +
+      '</ul></section>' +
+
+      '<section class="bench-block"><h3>Channels</h3>' +
+        '<div class="table-wrap"><table style="min-width:620px"><thead><tr><th>Channel</th><th>What it is</th><th>Reach a month (game)</th><th>Who can use it</th></tr></thead><tbody>' + channelRows + '</tbody></table></div>' +
+        '<p class="small muted">Reach is a game assumption. It sets how many clicks a channel can deliver to a business of this size. Nothing in the sources gives it directly.</p>' +
+      '</section>' +
+
+      '<section class="bench-block"><h3>Business profiles</h3>' +
+        '<div class="table-wrap"><table style="min-width:640px"><thead><tr><th>Profile</th><th>Average order or job</th><th>Gross margin</th><th>Break-even ROAS</th><th>Fixed costs a month</th><th>Organic orders or jobs a month</th><th>Reach base</th></tr></thead><tbody>' + profileRows + '</tbody></table></div>' +
+        '<p class="small muted">Order value, margin, fixed costs and organic sales are planning assumptions. Change them to match your own business when you read the results.</p>' +
+      '</section>' +
+
+      '<section class="bench-block"><h3>Cost per click and conversion by business</h3>' +
+        '<div class="legend">' +
+          '<span><strong>M</strong> measured figure from a named source.</span>' +
+          '<span><strong>D</strong> derived from sources (midpoint or conversion), or a general figure not specific to the business.</span>' +
+          '<span><strong>L</strong> low confidence: one third-party or older source.</span>' +
+          '<span><strong>P</strong> placeholder: no benchmark found, so this value is an assumption.</span>' +
+        '</div>' +
+        '<div class="table-wrap"><table style="min-width:700px"><thead><tr><th>Business</th><th>Channel</th><th>Cost per click</th><th>Conversion rate</th><th>Max cost per click that breaks even</th><th>Quality (click / conversion)</th></tr></thead><tbody>' + inputRows + '</tbody></table></div>' +
+        '<p class="small muted">Max cost per click that breaks even = conversion rate × order value × gross margin. Any channel whose cost per click is below that value earns a gross profit on each click.</p>' +
+      '</section>' +
+
+      '<section class="bench-block"><h3>Shared assumptions</h3><ul>' +
+        '<li><strong>Starting cash:</strong> ' + kc(START_CASH) + ' for every business, 12 months.</li>' +
+        '<li><strong>Currency:</strong> USD figures converted at ' + FX + ' Kč per USD (2026 average about 20.9, August 2026 about 21).</li>' +
+        '<li><strong>Heureka seasonal rise:</strong> +25% per click from November to January, per Heureka\'s price-list rules.</li>' +
+        '<li><strong>Events:</strong> each month has a 50% chance of one of these events, applied to the businesses it can affect: Meta CPC +20%, Google CPC +25%, Heureka CPC +5%, Criteo reach −30%, Sklik reach −20%, or 15 extra organic orders.</li>' +
+        '<li><strong>Random variation:</strong> clicks and orders each vary by up to ±7% from the average.</li>' +
+      '</ul></section>' +
+
+      '<section class="bench-block"><h3>Sources</h3><ul class="sources">' +
+        sourceItem('ViVa marketing: Kolik stojí reklama na internetu v roce 2025', 'https://vivamarketing.cz/novinky/kolik-stoji-reklama-na-internetu-v-roce-2025/', 'Czech cost per click: Google Search 10.61 Kč, Sklik Search 4.62 Kč, Facebook 9.51 Kč, Instagram 13.97 Kč. Facebook for home decor 5.48 Kč and for craftsmen 23.82 Kč. Period 1 Jan to 18 Feb 2025. Google and Meta figures come from conversion-optimised accounts run by the agency. Sklik figures are an average across all active Sklik accounts, from a Sklik specialist. Click-through rates are implied from the same table (CPM ÷ CPC).') +
+        sourceItem('TrendTrack: Meta ad spend by industry 2025', 'https://www.trendtrack.io/blog-post/meta-ad-spend-by-industry', 'Meta conversion rate: apparel 4.11%, beauty 7.10%. Used as the upper value in the midpoints.') +
+        sourceItem('Triple Whale: Facebook ads benchmarks', 'https://triplewhale.com/blog/facebook-ads-benchmarks', 'Meta conversion rate by category: food 2.02%, beauty 1.94%, baby 1.85%, apparel 1.46%, electronics 1.20%. The Meta home-decor conversion rate is an average of these five categories.') +
+        sourceItem('Triple Whale: Google Ads benchmarks', 'https://www.triplewhale.com/blog/google-ads-benchmarks', 'Google Ads e-commerce median conversion rate 3.11%, across all categories.') +
+        sourceItem('Retargeting benchmark roundups, 2026 (Searchlab, Foundry CRO)', 'https://searchlab.nl/en/statistics/retargeting-statistics-2026', 'Criteo retargeting conversion rate 3.8%, and Google retargeting cost per click $0.76 (about 16 Kč). A roundup also notes that up to 75% of retargeting conversions may not be incremental. Third-party summaries, not checked against Criteo\'s own reports. See also https://foundrycro.com/blog/retargeting-benchmarks-2026/') +
+        sourceItem('Jirkont.cz: CTR glossary', 'https://www.jirkont.cz/slovnik/ctr/', 'Sklik click-through rate ranges: search network 1 to 3%, content network 0.2 to 0.5%. Used as a cross-check on the ViVa-implied rates.') +
+        sourceItem('Heureka Group: Ceník prokliků (price list rules)', 'https://heureka.group/cs/pro-eshopy/ppc-rezim/cenik-prokliku', 'Seasonal rise of 25% on clicks, products up to 20 Kč not charged, and a price list revised about every two weeks. Some older sources date the seasonal rise to October to December; this game uses November to January. The page did not open in our reader, so these rules come from search excerpts.') +
+        sourceItem('Czech PPC blogs: Heureka minimum cost per click, Feb 2024 snapshot', null, 'Monitor at 10,500 Kč: 7.22 Kč. E-bike at 65,000 Kč: 8.65 Kč. Used for Heureka cost per click in electronics (7.22 Kč) and in the other profiles (average, 7.94 Kč). Minimums vary widely by category, from about 0.13 Kč to over 40 Kč, so check your own category.') +
+        sourceItem('Czech e-commerce blog on comparison-site traffic (older article)', null, 'Orders from comparison-site visitors: 3 to 9%. The game uses the lower value, 3%, because the figure is from an older article.') +
+        sourceItem('Pound Sterling Live: USD to CZK history 2026', 'https://www.poundsterlinglive.com/history/USD-CZK-2026', 'Exchange rate used to convert USD figures: about 20.9 Kč per USD on average in 2026, about 21 in August 2026.') +
+        sourceItem('Context only, not used in the calculations: WordStream / LocaliQ 2025 Google Ads benchmarks', 'https://www.wordstream.com/blog/2025-google-ads-benchmarks', 'US averages, mostly lead-generation accounts. Average conversion rate about 8%, far above the e-commerce figures used here.') +
+        sourceItem('Context only: Vaizle Meta Ads benchmarks, 2025', 'https://insights.vaizle.com/facebook-ad-benchmarks/', 'Average Meta cost per click $0.82 and average CTR 2.46% across more than 5,200 accounts, a global sample.') +
+      '</ul></section>' +
+
+      '<section class="bench-block"><h3>Read this before trusting the numbers</h3><ul class="caveats">' +
+        '<li>Conversion rates for Sklik and Google are not specific to each business. Sklik conversion rates are placeholders, because no Czech benchmark was found. Check both in your own accounts.</li>' +
+        '<li>Heureka has the weakest data: its conversion rate and cost per click come from older or single sources.</li>' +
+        '<li>Criteo cost per click comes from a US-based roundup converted at a planning exchange rate.</li>' +
+        '<li>Reach limits and all business assumptions are game choices. Your results depend most on them.</li>' +
+        '<li>Averages hide spread. A channel with a good average can still lose money for a specific product or audience.</li>' +
+      '</ul></section>';
+  }
+
+  function qualityName(code) {
+    return { M: 'measured', D: 'derived', L: 'low confidence', P: 'placeholder' }[code] || code;
+  }
+
+  /* ---------- Events ---------- */
+  document.querySelector('.tabs').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-nav]') : null;
+    if (!b) return;
+    if (b.getAttribute('data-nav') === 'bench') go('bench');
+    else go(G ? G.screen : 'setup');
+  });
+
+  app.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-action]') : null;
+    if (!b) return;
+    var a = b.getAttribute('data-action');
+    if (a === 'start') startGame(b.getAttribute('data-profile'));
+    else if (a === 'run') runMonth();
+    else if (a === 'next') nextMonth();
+    else if (a === 'spread') spreadEvenly();
+    else if (a === 'clear') clearSpend();
+    else if (a === 'again') startGame(G.profile);
+    else if (a === 'pick') { G = null; go('setup'); }
+    else if (a === 'bench') go('bench');
+  });
+
+  app.addEventListener('input', function (e) {
+    var t = e.target;
+    var id = t.getAttribute ? t.getAttribute('data-ch') : null;
+    if (!id || !G) return;
+    setSpend(id, t.value);
+    updatePlay();
+  });
+
+  app.addEventListener('change', function (e) {
+    var t = e.target;
+    var id = t.getAttribute ? t.getAttribute('data-ch') : null;
+    if (!id || !G) return;
+    setSpend(id, t.value);
+    t.value = G.spend[id];
+    updatePlay();
+  });
+
+  /* Test hook: lets a script drive the model directly. */
+  window.AdBudgetTycoon = {
+    PROFILES: PROFILES,
+    CHANNELS: CHANNELS,
+    EVENTS: EVENTS,
+    computeMonth: computeMonth,
+    idealFor: idealFor,
+    budgetCap: budgetCap,
+    startGame: startGame,
+    getState: function () { return G; },
+    setSpend: function (id, v) { setSpend(id, v); updatePlay(); },
+    runMonth: runMonth,
+    nextMonth: nextMonth
+  };
+
+  go('setup');
+})();
+</script>
+</body>
+</html>
