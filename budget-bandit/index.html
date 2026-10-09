@@ -1,0 +1,1696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Budget Bandit</title>
+<meta name="description" content="A 12-month marketing game for Czech business owners: Google, Sklik, Meta, TikTok, Heureka, Seznam Nákupy, Glami, Biano, Criteo, email, affiliate and marketplaces.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600;700&display=swap">
+<style>
+/* Layout: chunky game cards on a cool paper ground. Phone = stacked; desktop = tools | board | chat. */
+:root {
+  --paper: #ECEFF6;
+  --panel: #FFFFFF;
+  --panel-2: #F5F6FA;
+  --ink: #15131D;
+  --muted: #565D70;
+  --edge: #15131D;
+  --soft: #CDD3E1;
+  --shadow-c: #15131D;
+  --brand: #FF5B2E;
+  --brand-ink: #15131D;
+  --good: #0F7C45;
+  --bad: #C92F25;
+  --warn: #8F5B00;
+  --info: #2D58D2;
+  --r-search: #2F6BFF;
+  --r-aware: #E2387F;
+  --r-compare: #E89E00;
+  --r-retarget: #7B4DFF;
+  --r-retain: #0B9C78;
+  --r-sale: #5E7A1E;
+  --f-display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #100F17;
+    --panel: #1B1925;
+    --panel-2: #23202F;
+    --ink: #F2EFF9;
+    --muted: #A9AFC2;
+    --edge: #4B4663;
+    --soft: #34304A;
+    --shadow-c: #000000;
+    --brand: #FF6A3D;
+    --brand-ink: #15131D;
+    --good: #4DD48E;
+    --bad: #FF7A6E;
+    --warn: #F2B84B;
+    --info: #8DB0FF;
+    --r-search: #6C95FF;
+    --r-aware: #FF6BA6;
+    --r-compare: #FFC23D;
+    --r-retarget: #A68BFF;
+    --r-retain: #3FD3AC;
+    --r-sale: #A8C45A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #100F17;
+  --panel: #1B1925;
+  --panel-2: #23202F;
+  --ink: #F2EFF9;
+  --muted: #A9AFC2;
+  --edge: #4B4663;
+  --soft: #34304A;
+  --shadow-c: #000000;
+  --brand: #FF6A3D;
+  --brand-ink: #15131D;
+  --good: #4DD48E;
+  --bad: #FF7A6E;
+  --warn: #F2B84B;
+  --info: #8DB0FF;
+  --r-search: #6C95FF;
+  --r-aware: #FF6BA6;
+  --r-compare: #FFC23D;
+  --r-retarget: #A68BFF;
+  --r-retain: #3FD3AC;
+  --r-sale: #A8C45A;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 400 1rem/1.45 var(--f-body); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--info); outline-offset: 2px; }
+.wrap { max-width: 1280px; margin-inline: auto; padding-inline: 16px; padding-block: 12px 28px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+.good { color: var(--good); }
+.bad { color: var(--bad); }
+.warn { color: var(--warn); }
+.muted { color: var(--muted); }
+
+/* Chunky building blocks */
+.box { background: var(--panel); border: 2px solid var(--edge); border-radius: 16px; box-shadow: 3px 3px 0 var(--shadow-c); }
+.btn {
+  appearance: none; cursor: pointer; min-height: 48px; padding: 10px 18px;
+  border: 2px solid var(--edge); border-radius: 14px; background: var(--panel); color: var(--ink);
+  font: 700 1rem/1.1 var(--f-body); box-shadow: 3px 3px 0 var(--shadow-c);
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow-c); }
+.btn.primary { background: var(--brand); color: var(--brand-ink); }
+.btn.big { min-height: 60px; font-size: 1.15rem; padding-inline: 22px; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  appearance: none; cursor: pointer; min-height: 44px; min-width: 44px; padding: 8px 14px;
+  border: 2px solid var(--edge); border-radius: 12px; background: var(--panel); font-weight: 700;
+}
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button[disabled] { opacity: .45; cursor: not-allowed; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; border: 2px solid currentColor; font: 700 .8rem/1.2 var(--f-body); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chip.good { color: var(--good); }
+.chip.bad { color: var(--bad); }
+.chip.warn { color: var(--warn); }
+.chip.info { color: var(--info); }
+.chip.plain { color: var(--muted); }
+
+/* Brand */
+.logo { display: inline-flex; align-items: center; gap: 10px; font: 800 1.35rem/1 var(--f-display); letter-spacing: -.01em; }
+.logo svg { width: 38px; height: 38px; flex: none; }
+.topline { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* Start screen */
+.hero { padding-block: 18px 6px; }
+.hero h1 { font: 800 clamp(2.2rem, 7vw, 4.2rem)/0.95 var(--f-display); letter-spacing: -.02em; margin: 14px 0 10px; text-wrap: balance; }
+.hero p { margin: 0; color: var(--muted); font-size: 1.05rem; }
+.tool-strip { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 6px; }
+.pick-title { font: 800 .85rem/1 var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 22px 0 10px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { appearance: none; cursor: pointer; text-align: left; padding: 14px; display: grid; gap: 8px; min-height: 132px; }
+.tile svg { width: 34px; height: 34px; }
+.tile b { font: 800 1.05rem/1.15 var(--f-display); }
+.tile .mini { font-size: .82rem; color: var(--muted); }
+.tile[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.tile[aria-pressed="true"] .mini { color: var(--paper); opacity: .8; }
+.start-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 22px; }
+.best { color: var(--muted); font-size: .9rem; }
+
+/* Game layout */
+.game { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.bar { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 14px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+.cash { display: grid; line-height: 1.05; }
+.cash small { font-size: .75rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.cash strong { font: 800 1.5rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.months { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; min-width: 0; }
+.mcell { height: 26px; border-radius: 6px; border: 2px solid var(--soft); display: grid; place-items: center; font: 700 .7rem/1 var(--f-body); color: var(--muted); overflow: hidden; }
+.mcell.now { border-color: var(--edge); color: var(--ink); background: var(--panel-2); }
+.mcell.done { border-color: var(--edge); background: var(--ink); color: var(--paper); }
+.mcell.lost { background: var(--panel-2); border-color: var(--bad); color: var(--bad); }
+.bar-tools { display: flex; gap: 6px; align-items: center; }
+.icon-btn { appearance: none; cursor: pointer; min-width: 44px; min-height: 44px; border: 2px solid var(--edge); border-radius: 12px; background: var(--panel); font-weight: 800; }
+
+.board { display: grid; gap: 14px; }
+.meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.meter { padding: 10px 12px; display: grid; gap: 6px; min-width: 0; }
+.meter .k { font: 700 .72rem/1.1 var(--f-body); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.meter .v { font: 800 1.15rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.meter .track { height: 8px; border-radius: 99px; background: var(--panel-2); border: 1px solid var(--soft); overflow: hidden; }
+.meter .fill { height: 100%; width: 0; background: var(--c); transition: width .5s ease; }
+
+.playzone { display: grid; gap: 10px; }
+.playzone .btn { width: 100%; }
+.weekline { display: flex; justify-content: space-between; gap: 8px; font-weight: 700; font-size: .9rem; color: var(--muted); }
+.spark { padding: 10px 12px; }
+.spark svg { width: 100%; height: 92px; display: block; }
+.spark .k { font: 700 .72rem/1.1 var(--f-body); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+
+.feedbox { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; overflow: hidden; }
+.feedhead { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 2px solid var(--soft); font: 800 1rem/1 var(--f-display); }
+.feed { overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+.msg { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font: 800 .85rem/1 var(--f-body); border: 2px solid var(--c); background: color-mix(in srgb, var(--c) 22%, var(--panel)); color: var(--ink); }
+.bubble { background: var(--panel-2); border-radius: 4px 14px 14px 14px; padding: 7px 11px; min-width: 0; }
+.bubble .who { display: block; font: 700 .72rem/1.2 var(--f-body); color: var(--muted); }
+.bubble .txt { font-weight: 600; overflow-wrap: anywhere; }
+.msg .chip { margin-top: 6px; }
+.msg.me { grid-template-columns: minmax(0, 1fr); justify-items: end; }
+.msg.me .bubble { background: var(--ink); color: var(--paper); border-radius: 14px 4px 14px 14px; }
+.msg.boss .bubble { background: color-mix(in srgb, var(--brand) 22%, var(--panel)); border: 2px solid var(--brand); }
+.stamp { align-self: center; display: grid; justify-items: center; gap: 2px; padding: 10px 16px; border: 2px dashed var(--edge); border-radius: 14px; text-align: center; animation: thud .45s cubic-bezier(.3,1.6,.5,1) both; }
+.stamp b { font: 800 1rem/1.1 var(--f-display); }
+.stamp .stars { font-size: 1.2rem; letter-spacing: 2px; color: var(--brand); }
+.typing { color: var(--muted); font-weight: 700; padding-left: 44px; }
+.replies { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px; border-top: 2px solid var(--soft); }
+.replies:empty { display: none; }
+.replies .btn { flex: 1 1 140px; min-height: 52px; }
+.replies .btn small { display: block; font-weight: 600; font-size: .78rem; opacity: .8; margin-top: 2px; }
+
+.dock { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tool {
+  appearance: none; cursor: pointer; text-align: left; padding: 10px; min-height: 104px;
+  display: grid; grid-template-rows: auto auto 1fr; gap: 6px; position: relative; min-width: 0;
+}
+.tool .top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.badge { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; font: 800 .8rem/1 var(--f-body); border: 2px solid var(--c); background: color-mix(in srgb, var(--c) 22%, var(--panel)); color: var(--ink); }
+.tool .name { display: block; font: 800 .88rem/1.1 var(--f-display); overflow-wrap: break-word; hyphens: auto; }
+.tool .nm { display: grid; gap: 3px; min-width: 0; }
+.tool .role { display: block; font: 700 .66rem/1 var(--f-body); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.tool .budget { font: 800 1.05rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.tool .res { font: 700 .78rem/1.2 var(--f-body); align-self: end; font-variant-numeric: tabular-nums; }
+.tool.off { background: var(--panel-2); }
+.tool.locked { border-style: dashed; box-shadow: none; background: var(--panel-2); }
+.tool.bump { animation: bump .35s ease; }
+.float { position: absolute; right: 8px; top: 6px; font: 800 .85rem/1 var(--f-body); color: var(--good); animation: rise 1s ease forwards; pointer-events: none; }
+.playbar { position: sticky; bottom: 0; padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--paper); border-top: 2px solid var(--soft); z-index: 4; }
+.playbar.phone-only .weekline { display: none; }
+
+@media (max-width: 999px) {
+  .feedbox { height: 46vh; min-height: 300px; }
+  .desk-only { display: none !important; }
+}
+@media (min-width: 1000px) {
+  .game { grid-template-columns: 340px minmax(0, 1fr) 380px; grid-template-areas: "bar bar bar" "tools board feed"; align-items: start; }
+  .bar { grid-area: bar; }
+  .toolscol { grid-area: tools; }
+  .board { grid-area: board; }
+  .feedbox { grid-area: feed; height: calc(100vh - 120px); position: sticky; top: 92px; }
+  .dock { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .phone-only { display: none !important; }
+  .playbar { position: static; background: none; padding: 0; }
+}
+@media (max-width: 420px) {
+  .dock { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cash strong { font-size: 1.25rem; }
+  .months .mcell { font-size: .6rem; }
+}
+
+/* Sheet (bottom sheet on phone, dialog on desktop) */
+.layer { position: fixed; inset: 0; background: rgba(10, 9, 16, .55); z-index: 20; display: grid; align-items: end; justify-items: center; }
+.sheet { width: min(560px, 100%); max-height: 88vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding: 16px 16px calc(18px + env(safe-area-inset-bottom, 0px)); animation: slide .22s ease both; }
+@media (min-width: 700px) { .layer { align-items: center; } .sheet { border-radius: 22px; } }
+.sheet-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.sheet-head h2 { font: 800 1.35rem/1.1 var(--f-display); margin: 0; flex: 1; min-width: 0; }
+.sheet .line { margin: 6px 0; font-weight: 600; }
+.sheet .watch { margin: 8px 0 12px; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, var(--warn) 14%, var(--panel)); border: 2px solid var(--warn); font-weight: 600; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
+.sheet h3 { font: 800 .8rem/1 var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 16px 0 8px; }
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.stat { padding: 10px 12px; border-radius: 12px; background: var(--panel-2); }
+.stat small { display: block; color: var(--muted); font-weight: 700; font-size: .75rem; }
+.stat b { font: 800 1.1rem/1.2 var(--f-display); font-variant-numeric: tabular-nums; }
+.note { font-size: .85rem; color: var(--muted); margin: 8px 0 0; }
+.sources { margin: 0; padding-left: 18px; }
+.sources li { margin: 8px 0; }
+.sources a { color: var(--info); overflow-wrap: anywhere; }
+
+/* End screen */
+.end { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.end-hero { padding: 18px; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+.end-hero .rank { font: 800 clamp(2rem, 6vw, 3.4rem)/1 var(--f-display); letter-spacing: -.02em; }
+.end-hero .stars { font-size: clamp(1.1rem, 5vw, 1.6rem); color: var(--brand); letter-spacing: 2px; overflow-wrap: anywhere; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.kpi { padding: 12px 14px; }
+.kpi small { display: block; color: var(--muted); font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; }
+.kpi b { font: 800 1.45rem/1.15 var(--f-display); font-variant-numeric: tabular-nums; }
+.claimbar { padding: 14px; display: grid; gap: 10px; }
+.cb-row { display: grid; grid-template-columns: minmax(90px, auto) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-weight: 700; }
+.cb-track { height: 18px; border-radius: 8px; background: var(--panel-2); border: 2px solid var(--soft); overflow: hidden; }
+.cb-fill { height: 100%; }
+.report { padding: 6px 14px 14px; }
+.vrow { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 2px solid var(--soft); }
+.vrow:last-child { border-bottom: 0; }
+.vrow .what b { font: 800 1rem/1.1 var(--f-display); }
+.vrow .what small { display: block; color: var(--muted); font-weight: 600; font-size: .82rem; }
+.verdict { font: 800 .78rem/1 var(--f-body); letter-spacing: .06em; padding: 7px 10px; border-radius: 10px; border: 2px solid currentColor; text-transform: uppercase; }
+.v-keep { color: var(--good); }
+.v-add { color: var(--info); }
+.v-drop { color: var(--bad); }
+.v-tune { color: var(--warn); }
+.v-test { color: var(--muted); }
+.dots { letter-spacing: 1px; }
+.qlist { margin: 0; padding-left: 20px; }
+.qlist li { margin: 8px 0; font-weight: 600; }
+
+@keyframes thud { from { transform: scale(1.35); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes bump { 50% { transform: scale(1.04); } }
+@keyframes rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-26px); opacity: 0; } }
+@keyframes slide { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes pop { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+.msg { animation: pop .25s ease both; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .float { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"></div>
+<div class="layer" id="layer" hidden></div>
+<noscript><p class="wrap">Budget Bandit needs JavaScript.</p></noscript>
+<script>
+/* Budget Bandit engine. Pure model, no DOM. One game = 48 weeks (12 months x 4). */
+var BBEngine = (function () {
+  'use strict';
+
+  var WEEKS = 48;
+  var WPM = 4;                 // weeks per month
+  var BF_WEEK = 43;            // Black Friday: last week of November
+  var CUTOFF_WEEK = 47;        // Christmas shipping cut-off
+  var NOISE = 0.07;
+  var BUZZ_KEEP = 0.75;        // share of Buzz left after a week
+  var BRAND_CVR = 0.06;        // brand searchers who buy (assumption)
+  var SIZES = { s: 0.25, m: 1, l: 3 };   // about 2M, 8M and 25M Kč revenue a year
+  var FIXED_SIZE = { s: 0.2, m: 1, l: 3 }; // small shops run leaner
+  var SETUP = { feed: 5000, video: 10000, flows: 8000 };
+  var CREATIVE_REFRESH = 5000;
+  var INFLUENCER_FEE = 12000;  // micro creator post: 3,000-15,000 Kč (infl.cz)
+
+  /* Business profiles. Margins, fixed costs and organic orders are planning assumptions. */
+  var PROFILES = {
+    fashion: { eshop: true, reach: 0.6, cash: 500000, aov: 1100, margin: 0.45, fixed: 110000, organic: 30, reorder: 1.0, niche: 'glami', market: 0.13, list: 3000, cvr: { meta: 0.0279, tiktok: 0.012 } },
+    home: { eshop: true, reach: 0.28, cash: 600000, aov: 2400, margin: 0.40, fixed: 150000, organic: 14, reorder: 0.5, niche: 'biano', market: 0.11, list: 2000, cvr: { meta: 0.0169, tiktok: 0.012 } },
+    electronics: { eshop: true, reach: 0.3, cash: 400000, aov: 3800, margin: 0.12, fixed: 30000, organic: 10, reorder: 0.6, niche: null, market: 0.07, list: 2000, cvr: { meta: 0.012, tiktok: 0.012 }, heurekaCpc: 7.22 },
+    service: { eshop: false, reach: 0.1, cash: 400000, aov: 6000, margin: 0.35, fixed: 120000, organic: 8, reorder: 0.3, niche: null, market: 0, list: 800, cvr: { meta: 0.0169, tiktok: 0.006 }, metaCpc: 23.82 }
+  };
+
+  /* Tools. cpc in Kč, reach = clicks a week for a ~8M Kč business, cvr = real orders per click.
+     model: 'auction' (clicks saturate as you bid up) or 'list' (price-list CPC, linear until shoppers run out).
+     claim = how much the platform over-reports its own orders (game assumption, see sources). */
+  var TOOLS = {
+    google: { role: 'search', model: 'auction', cpc: 10.61, reach: 3000, demand: true, cvr: 0.0311, claim: 1.0, brandClaim: 0.7, q: 'M' },
+    sklik: { role: 'search', model: 'auction', cpc: 4.62, reach: 2000, demand: true, cvr: 0.0311, claim: 1.0, brandClaim: 0.3, q: 'P' },
+    pmax: { role: 'search', model: 'auction', cpc: 9.07, reach: 2500, demand: true, cvr: 0.0211, claim: 1.0, brandClaim: 0.5, needs: 'feed', learn: true, eshop: true, q: 'D' },
+    meta: { role: 'aware', model: 'auction', cpc: 11.74, reach: 5000, demand: false, claim: 1.6, buzz: 0.012, learn: true, fatigue: 0.03, q: 'D' },
+    tiktok: { role: 'aware', model: 'auction', cpc: 4.73, reach: 8000, demand: false, claim: 2.0, buzz: 0.008, needs: 'video', fatigue: 0.06, q: 'D' },
+    heureka: { role: 'compare', model: 'list', cpc: 7.94, reach: 1250, demand: true, cvr: 0.03, claim: 1.1, needs: 'feed', uplift: true, eshop: true, q: 'L' },
+    nakupy: { role: 'compare', model: 'list', cpc: 3.0, reach: 600, demand: true, cvr: 0.03, claim: 1.1, needs: 'feed', eshop: true, q: 'L' },
+    glami: { role: 'compare', model: 'list', cpc: 5.0, reach: 800, demand: true, cvr: 0.02, claim: 1.1, needs: 'feed', niche: 'glami', eshop: true, q: 'L' },
+    biano: { role: 'compare', model: 'list', cpc: 4.75, reach: 800, demand: true, cvr: 0.01, claim: 1.1, needs: 'feed', niche: 'biano', eshop: true, q: 'L' },
+    criteo: { role: 'retarget', model: 'auction', cpc: 15.96, poolShare: 0.025, cvr: 0.019, claim: 2.0, needs: 'feed', eshop: true, q: 'L' },
+    email: { role: 'retain', model: 'email', q: 'D' },
+    affiliate: { role: 'sale', model: 'affiliate', eshop: true, q: 'L' },
+    market: { role: 'sale', model: 'market', eshop: true, q: 'M' }
+  };
+  var ORDER = ['google', 'sklik', 'pmax', 'meta', 'tiktok', 'heureka', 'nakupy', 'glami', 'biano', 'criteo', 'email', 'affiliate', 'market'];
+  var PAID = ['google', 'sklik', 'pmax', 'meta', 'tiktok', 'heureka', 'nakupy', 'glami', 'biano', 'criteo'];
+  var EMAIL_SENDS = [0, 0.25, 1, 3];          // off, monthly, weekly, 3x a week
+  var EMAIL_ORDER_RATE = 0.0016;              // campaign placed-order rate (Klaviyo benchmarks)
+  var FLOW_ORDER_RATE = 0.0211;               // flow placed-order rate (Klaviyo benchmarks)
+  var EMAIL_COST_CONTACT_MONTH = 0.3;         // Kč per contact a month (assumption)
+  var AFFILIATE_STEPS = [0, 0.05, 0.08, 0.12];
+  var AFFILIATE_REAL = 0.6;                   // share of tracked affiliate orders that are truly extra (assumption)
+  var AFFILIATE_FEE_WEEK = 500;
+  var MARKET_FEE_WEEK = 970 / 4;              // Kaufland basic fee 39.95 EUR a month
+  var MARKET_PRICE_CUT = 0.05;                // price pressure on marketplaces (assumption)
+
+  function demandIndex(w) {
+    // Jan-Sep = 1. Oct-Dec carry one third of the year (APEK), Black Friday week about 4.1% of the year.
+    if (w === BF_WEEK) return 2.42;
+    if (w >= 36) return 1.416;
+    return 1;
+  }
+  function heurekaUplift(w) { return (w <= 3 || w >= 40) ? 1.25 : 1; } // Nov-Jan +25% (Heureka price rules)
+  function monthOf(w) { return Math.floor(w / WPM); }
+
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function available(profileId) {
+    var p = PROFILES[profileId];
+    return ORDER.filter(function (id) {
+      var t = TOOLS[id];
+      if (t.eshop && !p.eshop) return false;
+      if (t.niche && t.niche !== p.niche) return false;
+      return true;
+    });
+  }
+
+  function budgetSteps(s) {
+    return [0, 10000, 25000, 50000, 100000].map(function (v) { return Math.round(v * s / 500) * 500; });
+  }
+
+  function newGame(opts) {
+    var p = PROFILES[opts.profile];
+    var s = SIZES[opts.size] || 1;
+    var seed = opts.seed >>> 0;
+    var ev = mulberry32(seed ^ 0x9E3779B9);   // event schedule: same for everyone with this seed
+    var schedule = {
+      ios: 10 + Math.floor(ev() * 10),
+      war: 16 + Math.floor(ev() * 14),
+      surge: 20 + Math.floor(ev() * 12),
+      infl: [6 + Math.floor(ev() * 8), 28 + Math.floor(ev() * 8)],
+      viral: []
+    };
+    for (var i = 0; i < WEEKS; i++) schedule.viral.push(ev() < 0.04);
+    var budgets = {};
+    PAID.forEach(function (id) { budgets[id] = 0; });
+    var steps = budgetSteps(s);
+    budgets.google = steps[2];
+    budgets.sklik = steps[1];
+    budgets.meta = steps[2];
+    var g = {
+      profile: opts.profile, sizeKey: opts.size, s: s, seed: seed, daily: !!opts.daily,
+      week: 0, cash: p.cash * s, startCash: p.cash * s, fixedMonth: p.fixed * (FIXED_SIZE[opts.size] || 1), oneOff: 0, bailoutCash: 0,
+      budgets: budgets, prevBudgets: {},
+      email: { freq: 0, flows: false }, affiliate: 0, market: false,
+      ready: { feed: null, video: null, flows: null },
+      list: Math.round(p.list * s), buzz: 0, buzzBy: { meta: 0, tiktok: 0, infl: 0 },
+      pool: [0, 0, 0, 0], lastVisitors: 0, lastNewSubs: 0,
+      conv: { meta: 0, pmax: 0 }, fatigue: { meta: 0, tiktok: 0 }, swing: { meta: 0, pmax: 0, tiktok: 0 },
+      priceWar: { until: -1, matched: false }, surgeUntil: -1, ios: false,
+      bf: null, cutoff: null, pendingInfl: 0, decisions: {}, offered: {},
+      schedule: schedule, rng: mulberry32(seed), bailouts: 0, over: null,
+      weeks: [], months: []
+    };
+    PAID.forEach(function (id) { g.prevBudgets[id] = 0; });
+    return g;
+  }
+
+  function isReady(g, id) {
+    var need = TOOLS[id].needs;
+    if (!need) return true;
+    return g.ready[need] !== null && g.ready[need] <= g.week;
+  }
+
+  function setup(g, what) {
+    if (g.ready[what] !== null) return false;
+    g.cash -= SETUP[what];
+    g.oneOff += SETUP[what];
+    g.ready[what] = g.week + 1;
+    return true;
+  }
+
+  /* Called when the player starts a month: detect big budget swings (learning resets). */
+  function startMonth(g) {
+    ['meta', 'pmax', 'tiktok'].forEach(function (id) {
+      var prev = g.prevBudgets[id] || 0, now = g.budgets[id] || 0;
+      if (prev > 0 && now > 0 && Math.abs(now - prev) / prev > 0.5) g.swing[id] = 2;
+    });
+    PAID.forEach(function (id) { g.prevBudgets[id] = g.budgets[id] || 0; });
+  }
+
+  function decisionFor(g) {
+    var w = g.week, p = PROFILES[g.profile];
+    var list = [];
+    if (g.schedule.infl.indexOf(w) !== -1) list.push({ key: 'infl' + w, type: 'influencer', options: ['yes', 'no'], cost: INFLUENCER_FEE });
+    if (p.eshop && w === g.schedule.war && ((g.budgets.heureka > 0 && isReady(g, 'heureka')) || (g.budgets.nakupy > 0 && isReady(g, 'nakupy')))) list.push({ key: 'war', type: 'pricewar', options: ['match', 'keep'] });
+    if (w === BF_WEEK - 1) list.push({ key: 'bf', type: 'blackfriday', options: ['all', 'search', 'skip'] });
+    if (w === CUTOFF_WEEK && p.eshop) list.push({ key: 'cutoff', type: 'cutoff', options: ['pause', 'keep'] });
+    ['meta', 'tiktok'].forEach(function (id) {
+      if (g.fatigue[id] >= 0.2 && (g.budgets[id] || 0) > 0 && isReady(g, id)) {
+        var last = g.offered[id] === undefined ? -99 : g.offered[id];
+        if (w - last >= 4) list.push({ key: 'cr_' + id + w, type: 'creatives', tool: id, options: ['yes', 'no'], cost: CREATIVE_REFRESH });
+      }
+    });
+    for (var i = 0; i < list.length; i++) if (g.decisions[list[i].key] === undefined) return list[i];
+    return null;
+  }
+
+  function decide(g, d, choice) {
+    g.decisions[d.key] = choice;
+    var s = g.s;
+    if (d.type === 'influencer' && choice === 'yes') {
+      g.cash -= INFLUENCER_FEE; g.oneOff += INFLUENCER_FEE;
+      var pr = PROFILES[g.profile].reach;
+      g.buzz += 120 * s * pr; g.buzzBy.infl += 120 * s * pr;
+      g.pendingInfl += Math.round(6 * s * pr);
+    }
+    if (d.type === 'pricewar') g.priceWar = { until: g.week + 4, matched: choice === 'match' };
+    if (d.type === 'blackfriday') g.bf = choice;
+    if (d.type === 'cutoff') g.cutoff = choice;
+    if (d.type === 'creatives') {
+      g.offered[d.tool] = g.week;
+      if (choice === 'yes') { g.cash -= CREATIVE_REFRESH; g.oneOff += CREATIVE_REFRESH; g.fatigue[d.tool] = 0; }
+    }
+  }
+
+  function cpcFor(g, id, w) {
+    var t = TOOLS[id], p = PROFILES[g.profile];
+    var c = t.cpc;
+    if (id === 'meta' && p.metaCpc) c = p.metaCpc;
+    if (id === 'heureka' && p.heurekaCpc) c = p.heurekaCpc;
+    if (t.uplift) c *= heurekaUplift(w);
+    if (t.fatigue) c *= 1 + g.fatigue[id];
+    if (id === 'google' && w < g.surgeUntil) c *= 1.25;
+    return c;
+  }
+  function cvrFor(g, id) {
+    var t = TOOLS[id], p = PROFILES[g.profile];
+    return (p.cvr[id] !== undefined) ? p.cvr[id] : t.cvr;
+  }
+  function reachFor(g, id, w, poolTotal) {
+    var t = TOOLS[id];
+    if (id === 'criteo') return Math.max(1, poolTotal * t.poolShare);
+    var r = t.reach * g.s * PROFILES[g.profile].reach;
+    if (t.demand) r *= demandIndex(w);
+    return r;
+  }
+
+  function stepWeek(g) {
+    if (g.over || g.week >= WEEKS) return null;
+    var pending = decisionFor(g);
+    if (pending) return { decision: pending };
+
+    var w = g.week, p = PROFILES[g.profile], s = g.s, rng = g.rng;
+    var idx = demandIndex(w);
+    function jit() { return 1 - NOISE + 2 * NOISE * rng(); }
+    if (w === g.schedule.surge) g.surgeUntil = w + 2;
+    var events = [];
+    if (w === g.schedule.ios && !g.ios) { g.ios = true; events.push('ios'); }
+    if (w === g.schedule.surge) events.push('surge');
+    if (w === BF_WEEK) events.push('bf');
+
+    var warOn = w < g.priceWar.until;
+    var margin = p.margin - ((warOn && g.priceWar.matched) ? 0.03 : 0);
+    var poolTotal = g.pool.reduce(function (a, b) { return a + b; }, 0);
+    var cutFactor = (w === CUTOFF_WEEK && g.cutoff === 'keep') ? 0.75 : 1;
+    var R = { week: w, month: monthOf(w), idx: idx, tools: {}, events: events, spend: 0, costs: 0, gross: 0, rev: 0, orders: 0, claimRev: 0, visitors: 0 };
+    var visitors = 0, shopOrders = 0;
+
+    available(g.profile).forEach(function (id) {
+      var t = TOOLS[id];
+      if (PAID.indexOf(id) === -1) return;
+      var rec = { id: id, spend: 0, clicks: 0, orders: 0, halo: 0, rev: 0, claimRev: 0, capped: false, cpc: cpcFor(g, id, w), used: 0, ready: isReady(g, id) };
+      R.tools[id] = rec;
+      var b = (g.budgets[id] || 0) / WPM;
+      if (w === BF_WEEK && g.bf === 'all') b *= 2;
+      if (w === BF_WEEK && g.bf === 'search' && (t.role === 'search' || t.role === 'compare')) b *= 2;
+      if (w === CUTOFF_WEEK && g.cutoff === 'pause') b = 0;
+      if (!rec.ready || b <= 0) return;
+      var reach = reachFor(g, id, w, poolTotal);
+      var cpc = rec.cpc, clicks, spend;
+      if (t.model === 'list') {
+        clicks = Math.min(b / cpc, reach);
+        rec.capped = b / cpc > reach * 0.98;
+        clicks = Math.round(clicks * jit());
+        spend = Math.min(b, clicks * cpc);
+      } else {
+        clicks = reach * (1 - Math.exp(-b / (cpc * reach)));
+        rec.used = clicks / reach;
+        clicks = Math.round(clicks * jit());
+        spend = b;
+      }
+      var eff = 1;
+      if (t.learn) eff *= 0.6 + 0.4 * Math.min(1, g.conv[id] / 50);
+      if (g.swing[id] > 0) eff *= 0.85;
+      if (warOn && !g.priceWar.matched && t.role === 'compare') eff *= 0.6;
+      var orders = Math.round(clicks * cvrFor(g, id) * eff * cutFactor * jit());
+      rec.spend = spend; rec.clicks = clicks; rec.orders = orders; rec.eff = eff;
+      rec.rev = orders * p.aov;
+      var claim = t.claim;
+      if (id === 'meta' && g.ios) claim *= 0.7;
+      rec.claimRev = orders * claim * p.aov;
+      if (g.conv[id] !== undefined) g.conv[id] += orders;
+      visitors += clicks;
+      shopOrders += orders;
+      R.spend += spend;
+    });
+
+    // Brand searches from Buzz (awareness last weeks). Real orders, but search tools claim them.
+    var brandSearches = g.buzz;
+    var brandOrders = Math.round(brandSearches * BRAND_CVR * cutFactor * jit());
+    var buzzTotal = g.buzzBy.meta + g.buzzBy.tiktok + g.buzzBy.infl;
+    ['meta', 'tiktok'].forEach(function (id) {
+      if (!R.tools[id]) return;
+      var share = buzzTotal > 0 ? g.buzzBy[id] / buzzTotal : 0;
+      R.tools[id].halo = brandOrders * share;
+      R.tools[id].rev += R.tools[id].halo * p.aov;
+    });
+    ['google', 'pmax', 'sklik'].forEach(function (id) {
+      var rec = R.tools[id];
+      if (rec && rec.spend > 0) rec.claimRev += brandOrders * TOOLS[id].brandClaim * p.aov;
+    });
+    visitors += brandSearches;
+    shopOrders += brandOrders;
+
+    // Organic and direct
+    var orgOrders = Math.round(p.organic * s * idx * cutFactor * jit());
+    visitors += orgOrders / 0.02;
+    shopOrders += orgOrders;
+
+    // Influencer discount-code orders
+    var inflOrders = g.pendingInfl; g.pendingInfl = 0;
+    shopOrders += inflOrders;
+
+    // Email
+    var em = { id: 'email', spend: 0, orders: 0, rev: 0, claimRev: 0, list: g.list };
+    var sends = EMAIL_SENDS[g.email.freq] || 0;
+    var unsub = 0;
+    if (sends > 0) {
+      var claimed = g.list * EMAIL_ORDER_RATE * p.reorder * sends;
+      em.orders = Math.round(claimed / 1.3 * jit());
+      em.claimRev = claimed * p.aov;
+      em.spend = g.list * EMAIL_COST_CONTACT_MONTH / WPM;
+      unsub = g.list * (g.email.freq === 3 ? 0.005 : 0.003) * sends;
+    }
+    if (g.ready.flows !== null && g.ready.flows <= w) {
+      var recipients = g.lastNewSubs + 0.02 * g.lastVisitors;
+      var flowClaim = recipients * FLOW_ORDER_RATE;
+      em.orders += Math.round(flowClaim * 0.7 * jit());
+      em.claimRev += flowClaim * p.aov;
+      if (sends === 0) em.spend = g.list * EMAIL_COST_CONTACT_MONTH / WPM;
+    }
+    em.rev = em.orders * p.aov;
+    shopOrders += em.orders;
+    R.tools.email = em;
+
+    // Affiliate (commission per tracked sale; some tracked sales would have happened anyway)
+    var af = { id: 'affiliate', spend: 0, orders: 0, rev: 0, claimRev: 0 };
+    if (p.eshop && g.affiliate > 0) {
+      var tracked = Math.round(8 * s * p.reach * idx * Math.pow(g.affiliate / 0.08, 0.7) * jit());
+      af.orders = Math.round(tracked * AFFILIATE_REAL);
+      af.claimRev = tracked * p.aov;
+      af.rev = af.orders * p.aov;
+      af.spend = g.affiliate * tracked * p.aov + AFFILIATE_FEE_WEEK;
+      shopOrders += af.orders;
+    }
+    R.tools.affiliate = af;
+
+    // Marketplace (commission per sale, price pressure, no customer data)
+    var mk = { id: 'market', spend: 0, orders: 0, rev: 0, claimRev: 0 };
+    if (p.eshop && g.market) {
+      mk.orders = Math.round(15 * s * p.reach * idx * jit());
+      mk.rev = mk.orders * p.aov;
+      mk.claimRev = mk.rev;
+      mk.spend = p.market * mk.rev + mk.rev * MARKET_PRICE_CUT + MARKET_FEE_WEEK;
+    }
+    R.tools.market = mk;
+
+    // Totals: real money only
+    var paidOrders = 0;
+    PAID.forEach(function (id) { if (R.tools[id]) paidOrders += R.tools[id].orders; });
+    R.orders = paidOrders + brandOrders + orgOrders + inflOrders + em.orders + af.orders + mk.orders;
+    R.rev = R.orders * p.aov;
+    R.gross = R.rev * margin;
+    R.brandOrders = brandOrders; R.orgOrders = orgOrders; R.inflOrders = inflOrders;
+    R.costs = R.spend + em.spend + af.spend + mk.spend;
+    R.fixed = g.fixedMonth * s / WPM;
+    R.net = R.gross - R.costs - R.fixed;
+    R.oneOff = g.oneOff; g.oneOff = 0;      // setups, influencer deals, creatives (already paid from cash)
+    R.bank = R.net - R.oneOff;
+    R.claimRev = 0;
+    Object.keys(R.tools).forEach(function (id) { R.claimRev += R.tools[id].claimRev; });
+    R.visitors = visitors;
+    R.margin = margin;
+
+    g.cash += R.net;
+
+    // State updates for next week
+    var newSubs = Math.round((shopOrders) * 0.3 + visitors * 0.003);
+    g.list = Math.max(0, Math.round(g.list - unsub + newSubs));
+    g.lastNewSubs = newSubs; g.lastVisitors = visitors;
+    g.pool.shift(); g.pool.push(visitors);
+    var add = { meta: 0, tiktok: 0 };
+    ['meta', 'tiktok'].forEach(function (id) {
+      var rec = R.tools[id];
+      if (rec) add[id] = rec.clicks * TOOLS[id].buzz;
+    });
+    var viral = !!(g.schedule.viral[w] && R.tools.tiktok && R.tools.tiktok.spend > 0);
+    if (viral) { add.tiktok += 400 * s * p.reach; R.events.push('viral'); }
+    g.buzzBy.meta = g.buzzBy.meta * BUZZ_KEEP + add.meta;
+    g.buzzBy.tiktok = g.buzzBy.tiktok * BUZZ_KEEP + add.tiktok;
+    g.buzzBy.infl = g.buzzBy.infl * BUZZ_KEEP;
+    g.buzz = g.buzzBy.meta + g.buzzBy.tiktok + g.buzzBy.infl;
+    ['meta', 'tiktok'].forEach(function (id) {
+      var rec = R.tools[id];
+      if (rec && rec.spend > 0) g.fatigue[id] = Math.min(0.6, g.fatigue[id] + TOOLS[id].fatigue);
+      else g.fatigue[id] = Math.max(0, g.fatigue[id] - 0.1);
+    });
+    ['meta', 'pmax', 'tiktok'].forEach(function (id) { if (g.swing[id] > 0) g.swing[id] -= 1; });
+
+    R.cash = g.cash;
+    if (g.cash < 0) {
+      if (g.bailouts === 0) {
+        g.bailouts = 1;
+        g.cash += 3 * g.fixedMonth * s;
+        g.bailoutCash += 3 * g.fixedMonth * s;
+        R.events.push('bailout');
+      } else {
+        g.over = 'bankrupt';
+        R.events.push('bankrupt');
+      }
+    }
+    R.cashAfter = g.cash;
+    g.weeks.push(R);
+
+    if (w % WPM === WPM - 1) {
+      var mw = g.weeks.slice(-WPM);
+      var m = { month: monthOf(w), net: 0, rev: 0, claimRev: 0, spend: 0, orders: 0, tools: {} };
+      mw.forEach(function (x) {
+        m.net += x.bank; m.rev += x.rev; m.claimRev += x.claimRev; m.spend += x.costs; m.orders += x.orders;
+        Object.keys(x.tools).forEach(function (id) {
+          var t = x.tools[id];
+          var a = m.tools[id] || (m.tools[id] = { spend: 0, rev: 0, claimRev: 0, orders: 0 });
+          a.spend += t.spend; a.rev += t.rev; a.claimRev += t.claimRev; a.orders += t.orders + (t.halo || 0);
+        });
+      });
+      var fixedMonth = g.fixedMonth * s;
+      m.stars = m.net < 0 ? 0 : (m.net < 0.2 * fixedMonth ? 1 : (m.net < 0.4 * fixedMonth ? 2 : 3));
+      g.months.push(m);
+      R.monthEnd = m;
+    }
+    g.week += 1;
+    if (g.week >= WEEKS && !g.over) g.over = 'done';
+    return { week: R };
+  }
+
+  /* Totals per tool across the whole game (real money). */
+  function profit(g) { return g.cash - g.startCash - g.bailoutCash; }
+
+  function toolTotals(g) {
+    var out = {};
+    available(g.profile).forEach(function (id) { out[id] = { spend: 0, rev: 0, claimRev: 0, orders: 0 }; });
+    g.weeks.forEach(function (x) {
+      Object.keys(x.tools).forEach(function (id) {
+        var t = x.tools[id], a = out[id];
+        if (!a) return;
+        a.spend += t.spend; a.rev += t.rev; a.claimRev += t.claimRev; a.orders += t.orders + (t.halo || 0);
+      });
+    });
+    return out;
+  }
+
+  /* Steady-state economics of one tool for this business in an average week (no events, learning done). */
+  function economics(g, id) {
+    var p = PROFILES[g.profile], t = TOOLS[id], s = g.s;
+    var margin = p.margin;
+    if (t.model === 'auction') {
+      var cvr = cvrFor(g, id);
+      var haloPerClick = t.buzz ? t.buzz / (1 - BUZZ_KEEP) * BRAND_CVR : 0;
+      var ordersPerClick = cvr + haloPerClick;
+      var v = ordersPerClick * p.aov * margin;
+      var c = t.cpc;
+      if (id === 'meta' && p.metaCpc) c = p.metaCpc;
+      var reach = id === 'criteo' ? 1000 * s * p.reach : reachFor({ s: s, profile: g.profile, fatigue: {} }, id, 0, 0);
+      if (v <= c) return { profitable: false, pno: c / (ordersPerClick * p.aov), monthly: 0, profit: 0 };
+      var S = reach * c * Math.log(v / c);
+      var clicks = reach * (1 - Math.exp(-S / (c * reach)));
+      var rev = clicks * ordersPerClick * p.aov;
+      return { profitable: true, pno: S / rev, monthly: S * WPM, profit: (clicks * v - S) * WPM };
+    }
+    if (t.model === 'list') {
+      var cl = t.cpc;
+      if (id === 'heureka' && p.heurekaCpc) cl = p.heurekaCpc;
+      var cv = cvrFor(g, id);
+      var r = t.reach * s * p.reach;
+      var vv = cv * p.aov * margin;
+      return { profitable: vv > cl, pno: cl / (cv * p.aov), monthly: vv > cl ? r * cl * WPM : 0, profit: vv > cl ? r * (vv - cl) * WPM : 0 };
+    }
+    if (t.model === 'email') {
+      var perContact = EMAIL_ORDER_RATE * p.reorder / 1.3 * p.aov;     // weekly sends
+      var cost = EMAIL_COST_CONTACT_MONTH / WPM;
+      return { profitable: perContact * margin > cost, pno: cost / perContact, monthly: p.list * s * EMAIL_COST_CONTACT_MONTH, profit: (perContact * margin - cost) * p.list * s * WPM };
+    }
+    if (t.model === 'affiliate') {
+      var comm = 0.08;
+      return { profitable: AFFILIATE_REAL * margin > comm, pno: comm / AFFILIATE_REAL, monthly: 0, profit: 0 };
+    }
+    if (t.model === 'market') {
+      var net = margin - MARKET_PRICE_CUT - p.market;
+      return { profitable: net > 0.02, pno: p.market + MARKET_PRICE_CUT, monthly: 0, profit: 0 };
+    }
+    return { profitable: false, pno: 1, monthly: 0, profit: 0 };
+  }
+
+  /* Keep / add / drop / tune verdict per tool. */
+  function verdicts(g) {
+    var totals = toolTotals(g), p = PROFILES[g.profile];
+    return available(g.profile).map(function (id) {
+      var e = economics(g, id), tt = totals[id];
+      var used = tt.spend > 0;
+      var pno = tt.rev > 0 ? tt.spend / tt.rev : (used ? Infinity : null);
+      var v;
+      if (!e.profitable) v = 'drop';
+      else if (used) v = (pno !== null && pno <= p.margin) ? 'keep' : 'tune';
+      else v = (TOOLS[id].q === 'L' || TOOLS[id].q === 'P') ? 'test' : 'add';
+      return { id: id, verdict: v, pno: pno, expectedPno: e.pno, idealMonthly: e.monthly, used: used, q: TOOLS[id].q, claimRev: tt.claimRev, rev: tt.rev, spend: tt.spend };
+    });
+  }
+
+  return {
+    WEEKS: WEEKS, WPM: WPM, BF_WEEK: BF_WEEK, CUTOFF_WEEK: CUTOFF_WEEK, SIZES: SIZES, SETUP: SETUP,
+    PROFILES: PROFILES, TOOLS: TOOLS, ORDER: ORDER, PAID: PAID, EMAIL_SENDS: EMAIL_SENDS, AFFILIATE_STEPS: AFFILIATE_STEPS,
+    INFLUENCER_FEE: INFLUENCER_FEE, CREATIVE_REFRESH: CREATIVE_REFRESH,
+    demandIndex: demandIndex, heurekaUplift: heurekaUplift, available: available, budgetSteps: budgetSteps,
+    newGame: newGame, isReady: isReady, setup: setup, startMonth: startMonth, decisionFor: decisionFor, decide: decide,
+    stepWeek: stepWeek, profit: profit, toolTotals: toolTotals, economics: economics, verdicts: verdicts, cpcFor: cpcFor, mulberry32: mulberry32
+  };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = BBEngine;
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = BBEngine;
+
+  /* ---------- Storage (per viewer convenience only) ---------- */
+  var KEY = 'budget-bandit-v2';
+  function loadStore() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function saveStore() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* storage blocked */ } }
+  var store = loadStore();
+  if (!store.best) store.best = {};
+
+  /* ---------- Language ---------- */
+  var navLang = (navigator.language || 'en').toLowerCase();
+  var lang = store.lang || ((navLang.indexOf('cs') === 0 || navLang.indexOf('sk') === 0) ? 'cs' : 'en');
+
+  var T = {
+    en: {
+      tagline: 'Twelve months. Thirteen ad tools. One budget.',
+      pickBiz: 'Your business', pickSize: 'Yearly revenue', pickMode: 'Mode',
+      daily: 'Daily challenge #{n}', free: 'Free play', start: 'Start the year',
+      best: 'Best here: {v}',
+      biz_fashion: 'Fashion e-shop', biz_home: 'Home & furniture', biz_electronics: 'Electronics', biz_service: 'Local service',
+      sub_fashion: 'Order {aov} · margin {m}', sub_home: 'Order {aov} · margin {m}', sub_electronics: 'Order {aov} · margin {m}', sub_service: 'Job {aov} · margin {m}',
+      size_s: '2M', size_m: '8M', size_l: '25M',
+      cash: 'Cash', week: 'Week {w}/4', play: 'Play {m}', resume: 'Resume', pause: 'Pause', sources: 'Data',
+      buzz: 'Buzz', pool: 'Retargeting pool', list: 'Email list',
+      buzzUnit: 'brand searches/wk', poolUnit: 'visitors/4 wk', listUnit: 'contacts',
+      chat: 'Team chat', cashLine: 'Cash by week',
+      off: 'Off', on: 'On', locked: 'Needs {x}', readySoon: 'Ready next week',
+      need_feed: 'feed', need_video: 'videos',
+      perMonth: '/mo',
+      role_search: 'Search', role_aware: 'Awareness', role_compare: 'Comparison', role_retarget: 'Retargeting', role_retain: 'Retention', role_sale: 'Pay per sale',
+      res4: '4 wk: {p}',
+      budgetMonth: 'Budget a month', setupBtn: 'Set up {x} · {c}', last4: 'Last 4 weeks',
+      spent: 'Spent', realSales: 'Real sales', platformSays: 'Platform says', pnoReal: 'Real PNO', pnoPlatform: 'Platform PNO',
+      cpc: 'Click {v}', conv: 'Conversion {v}', maxcpc: 'Break-even click {v}', breakeven: 'Break-even PNO {v}',
+      quality: 'Data: {v}', q_M: 'measured', q_D: 'derived', q_L: 'weak', q_P: 'estimate',
+      watch: 'Watch out',
+      pauseToEdit: 'Pause to change the plan.',
+      emailFreq: 'Newsletter', f0: 'Off', f1: 'Monthly', f2: 'Weekly', f3: '3× a week',
+      flows: 'Automations', flowsOn: 'Automations on', flowsBtn: 'Add automations · {c}',
+      commission: 'Commission', costContact: '{v}/contact a month', orderRate: '{v} orders per send',
+      marketFee: 'Commission {v} + price pressure',
+      close: 'Close',
+      // Feed
+      who_petra: 'Petra · PPC', who_tomas: 'Tomáš · warehouse', who_acct: 'Accountant', who_customer: 'Customer', who_you: 'You',
+      m_hello: 'Hi! Starter plan is set.', m_tap: 'Tap a tool to change it.', m_press: 'Press Play when ready.',
+      m_busy: 'Busy week! Packing nonstop.', m_fire: '{t} is on fire.', m_lost: '{t} lost money.',
+      m_claim: 'Platforms claim {a}. Real: {b}.',
+      m_cap: 'No more shoppers this week.', m_learn: '{t} is still learning.', m_swing: 'Big change. {t} relearns.',
+      m_ios: 'iOS update: Meta sees fewer sales.', m_surge: 'Competitors bid up search.', m_viral: 'Your TikTok went viral!',
+      m_bf: 'Black Friday! Orders everywhere.', m_bailout: 'Investor saved you. Last chance.', m_bankrupt: 'Out of cash. Game over.',
+      m_saw: 'Saw you on {t}. Ordered!',
+      tip_feed: 'Set up a product feed. Unlocks 6 tools.', tip_email: 'Email is nearly free. Switch it on.',
+      tip_criteo: 'Criteo claims double what it sells.', tip_buzz: 'Brand searches falling since ads stopped.',
+      tip_ready: '{x} ready. New tools unlocked.',
+      d_infl: 'Influencer offers a reel. Deal?', d_war: 'Competitor cut prices on Heureka.', d_bf: 'Black Friday next week. Go big?',
+      d_cutoff: 'Christmas cut-off. Late orders get cancelled.', d_cr: '{t} ads are tired. New creatives?',
+      o_yes: 'Yes', o_no: 'No', o_later: 'Later', o_match: 'Match price', o_keep: 'Keep price', o_all: 'All in',
+      o_search: 'Search only', o_skip: 'Skip', o_pause: 'Pause ads', o_keepgoing: 'Keep going',
+      s_margin: 'margin −3 pts, 4 wk', s_conv: 'fewer sales, 4 wk', s_x2: 'budgets ×2', s_x2s: 'search ×2',
+      chip_orders: '+{n} orders', chip_jobs: '+{n} jobs', chip_max: 'sold out', chip_learn: '{n}/50 orders', chip_rep: 'reported −30%',
+      chip_cpc: 'click +25%', chip_buzz: 'Buzz ↑', chip_tools: '6 tools', chip_drop: '−{p}',
+      month_stamp: '{m}', month_profit: 'Profit {v}',
+      // End
+      yearDone: 'Year done', profitYear: 'Profit', revenueYear: 'Revenue', starsK: 'Stars', pnoYear: 'Total ad PNO',
+      rank0: 'Cash burner', rank1: 'Survivor', rank2: 'Solid operator', rank3: 'Budget Bandit', bankruptTitle: 'Out of cash',
+      claimTitle: 'Platforms vs your bank', claimPlat: 'Platforms', claimReal: 'Real',
+      claimNote: 'Every platform counts the same orders. Ask for real numbers.',
+      reportTitle: 'Your tool report card', expPno: 'PNO {v}', effort: 'Effort: {v}', eff_L: 'low', eff_M: 'medium', eff_H: 'high',
+      v_keep: 'Keep', v_add: 'Add', v_drop: 'Drop', v_tune: 'Cut budget', v_test: 'Test',
+      askTitle: 'Ask your agency',
+      ask1: 'What is each channel\'s PNO with click-only attribution?',
+      ask2: 'How many new vs returning customers does each channel bring?',
+      ask3: 'How much of Search and PMax is our own brand name?',
+      share: 'Copy result', copied: 'Copied', again: 'Play again', newBiz: 'Change business',
+      dataTitle: 'Data and sources', dataIntro: 'Prices excl. VAT. PNO = ad cost ÷ revenue. Break-even PNO = your gross margin.',
+      assumptions: 'Game assumptions', srcTitle: 'Sources', season: 'Season',
+      lang: 'Čeština'
+    },
+    cs: {
+      tagline: 'Dvanáct měsíců. Třináct reklamních nástrojů. Jeden rozpočet.',
+      pickBiz: 'Tvůj byznys', pickSize: 'Roční obrat', pickMode: 'Režim',
+      daily: 'Denní výzva #{n}', free: 'Volná hra', start: 'Začít rok',
+      best: 'Nejlepší výsledek: {v}',
+      biz_fashion: 'Módní e-shop', biz_home: 'Nábytek a bydlení', biz_electronics: 'Elektronika', biz_service: 'Místní služby',
+      sub_fashion: 'Objednávka {aov} · marže {m}', sub_home: 'Objednávka {aov} · marže {m}', sub_electronics: 'Objednávka {aov} · marže {m}', sub_service: 'Zakázka {aov} · marže {m}',
+      size_s: '2 mil.', size_m: '8 mil.', size_l: '25 mil.',
+      cash: 'Hotovost', week: 'Týden {w}/4', play: 'Hrát {m}', resume: 'Pokračovat', pause: 'Pauza', sources: 'Data',
+      buzz: 'Povědomí', pool: 'Retargeting', list: 'E-maily',
+      buzzUnit: 'brand. hledání/týd.', poolUnit: 'návštěv/4 týd.', listUnit: 'kontaktů',
+      chat: 'Týmový chat', cashLine: 'Hotovost po týdnech',
+      off: 'Vyp.', on: 'Zap.', locked: 'Chce {x}', readySoon: 'Hotovo příští týden',
+      need_feed: 'feed', need_video: 'videa',
+      perMonth: '/měs.',
+      role_search: 'Vyhledávání', role_aware: 'Povědomí', role_compare: 'Srovnávač', role_retarget: 'Retargeting', role_retain: 'Věrnost', role_sale: 'Platba za prodej',
+      res4: '4 týd.: {p}',
+      budgetMonth: 'Rozpočet na měsíc', setupBtn: 'Nastavit {x} · {c}', last4: 'Poslední 4 týdny',
+      spent: 'Utraceno', realSales: 'Skutečné tržby', platformSays: 'Platforma tvrdí', pnoReal: 'Skutečné PNO', pnoPlatform: 'PNO podle platformy',
+      cpc: 'Klik {v}', conv: 'Konverze {v}', maxcpc: 'Klik na nule {v}', breakeven: 'PNO na nule {v}',
+      quality: 'Data: {v}', q_M: 'změřená', q_D: 'odvozená', q_L: 'slabá', q_P: 'odhad',
+      watch: 'Pozor',
+      pauseToEdit: 'Plán změníš po pauze.',
+      emailFreq: 'Newsletter', f0: 'Vyp.', f1: 'Měsíčně', f2: 'Týdně', f3: '3× týdně',
+      flows: 'Automatizace', flowsOn: 'Automatizace běží', flowsBtn: 'Přidat automatizace · {c}',
+      commission: 'Provize', costContact: '{v}/kontakt měsíčně', orderRate: '{v} objednávek na rozeslání',
+      marketFee: 'Provize {v} + tlak na cenu',
+      close: 'Zavřít',
+      who_petra: 'Petra · PPC', who_tomas: 'Tomáš · sklad', who_acct: 'Účetní', who_customer: 'Zákazník', who_you: 'Ty',
+      m_hello: 'Ahoj! Startovní plán je nastavený.', m_tap: 'Klepni na nástroj a změň ho.', m_press: 'Až budeš připraven, dej Hrát.',
+      m_busy: 'Nabitý týden! Balíme bez přestávky.', m_fire: '{t} jede naplno.', m_lost: '{t} prodělal.',
+      m_claim: 'Platformy tvrdí {a}. Skutečnost: {b}.',
+      m_cap: 'Tento týden už nejsou zákazníci.', m_learn: '{t} se pořád učí.', m_swing: 'Velká změna. {t} se učí znovu.',
+      m_ios: 'Update iOS: Meta vidí méně prodejů.', m_surge: 'Konkurence přihazuje ve vyhledávání.', m_viral: 'Tvůj TikTok se stal virálním!',
+      m_bf: 'Black Friday! Objednávky všude.', m_bailout: 'Investor tě zachránil. Poslední šance.', m_bankrupt: 'Došly peníze. Konec hry.',
+      m_saw: 'Viděl jsem vás na {t}. Objednáno!',
+      tip_feed: 'Nastav produktový feed. Odemkne 6 nástrojů.', tip_email: 'E-mail je skoro zdarma. Zapni ho.',
+      tip_criteo: 'Criteo hlásí dvakrát víc, než prodá.', tip_buzz: 'Brandové hledání klesá, reklama stojí.',
+      tip_ready: '{x} je hotový. Nové nástroje odemčeny.',
+      d_infl: 'Influencer nabízí reel. Bereš?', d_war: 'Konkurence na Heurece zlevnila.', d_bf: 'Příští týden Black Friday. Do toho?',
+      d_cutoff: 'Vánoční uzávěrka. Pozdní objednávky se ruší.', d_cr: 'Reklamy na {t} se okoukaly. Nové kreativy?',
+      o_yes: 'Ano', o_no: 'Ne', o_later: 'Později', o_match: 'Srovnat cenu', o_keep: 'Držet cenu', o_all: 'Naplno',
+      o_search: 'Jen vyhledávání', o_skip: 'Vynechat', o_pause: 'Vypnout reklamy', o_keepgoing: 'Jet dál',
+      s_margin: 'marže −3 b., 4 týd.', s_conv: 'méně prodejů, 4 týd.', s_x2: 'rozpočty ×2', s_x2s: 'vyhledávání ×2',
+      chip_orders: '+{n} obj.', chip_jobs: '+{n} zakázek', chip_max: 'vyprodáno', chip_learn: '{n}/50 obj.', chip_rep: 'hlášeno −30 %',
+      chip_cpc: 'klik +25 %', chip_buzz: 'Povědomí ↑', chip_tools: '6 nástrojů', chip_drop: '−{p}',
+      month_stamp: '{m}', month_profit: 'Zisk {v}',
+      yearDone: 'Rok za námi', profitYear: 'Zisk', revenueYear: 'Obrat', starsK: 'Hvězdy', pnoYear: 'Celkové PNO reklamy',
+      rank0: 'Pálič peněz', rank1: 'Přeživší', rank2: 'Spolehlivý obchodník', rank3: 'Rozpočtový bandita', bankruptTitle: 'Došly peníze',
+      claimTitle: 'Platformy vs. tvůj účet', claimPlat: 'Platformy', claimReal: 'Skutečnost',
+      claimNote: 'Každá platforma si připíše stejné objednávky. Chtějte skutečná čísla.',
+      reportTitle: 'Vysvědčení nástrojů', expPno: 'PNO {v}', effort: 'Náročnost: {v}', eff_L: 'nízká', eff_M: 'střední', eff_H: 'vysoká',
+      v_keep: 'Nechat', v_add: 'Přidat', v_drop: 'Vypnout', v_tune: 'Ubrat', v_test: 'Otestovat',
+      askTitle: 'Zeptejte se agentury',
+      ask1: 'Jaké je PNO jednotlivých kanálů při atribuci jen na proklik?',
+      ask2: 'Kolik nových a kolik vracejících se zákazníků přináší každý kanál?',
+      ask3: 'Kolik z vyhledávání a PMax tvoří náš vlastní brand?',
+      share: 'Zkopírovat výsledek', copied: 'Zkopírováno', again: 'Hrát znovu', newBiz: 'Změnit byznys',
+      dataTitle: 'Data a zdroje', dataIntro: 'Ceny bez DPH. PNO = náklady na reklamu ÷ obrat. PNO na nule = tvoje hrubá marže.',
+      assumptions: 'Předpoklady hry', srcTitle: 'Zdroje', season: 'Sezóna',
+      lang: 'English'
+    }
+  };
+
+  /* Per-tool copy. what = what it is, watch = the trap. */
+  var TOOLTXT = {
+    google: { en: ['Google Ads', 'Search ads on Google. Catches people already looking.', 'Brand searches look great, but most would buy anyway.'], cs: ['Google Ads', 'Reklama ve vyhledávání Google. Chytá lidi, kteří už hledají.', 'Brandové dotazy vypadají skvěle, většina by koupila i tak.'] },
+    sklik: { en: ['Sklik', 'Seznam search ads. Cheaper clicks, fewer searchers.', 'Runs out of searchers sooner than Google.'], cs: ['Sklik', 'Reklama ve vyhledávání Seznamu. Levnější kliky, méně hledajících.', 'Hledající dojdou dřív než na Googlu.'] },
+    pmax: { en: ['Shopping / PMax', 'Google product ads everywhere. Needs a product feed.', 'Learns for about 50 orders and grabs brand traffic too.'], cs: ['Shopping / PMax', 'Produktové reklamy napříč Googlem. Potřebuje feed.', 'Učí se zhruba 50 objednávek a bere i brandový provoz.'] },
+    meta: { en: ['Meta', 'Facebook and Instagram. Reaches people before they search.', 'Ads tire out. Part of its value shows up later in search.'], cs: ['Meta', 'Facebook a Instagram. Osloví lidi dřív, než začnou hledat.', 'Reklamy se okoukají. Část hodnoty přijde později ve vyhledávání.'] },
+    tiktok: { en: ['TikTok', 'Short videos. Cheap clicks, few direct orders.', 'Needs videos. Its own ROAS report is inflated.'], cs: ['TikTok', 'Krátká videa. Levné kliky, málo přímých objednávek.', 'Potřebuje videa. Jeho vlastní ROAS je nafouknuté.'] },
+    heureka: { en: ['Heureka', 'Biggest Czech price comparison. Click price set by category.', 'Clicks cost 25% more Nov to Jan. Your price decides.'], cs: ['Heureka', 'Největší český srovnávač. Cenu kliku určuje ceník kategorie.', 'Od listopadu do ledna o 25 % dražší. Rozhoduje tvoje cena.'] },
+    nakupy: { en: ['Seznam Nákupy', 'Seznam price comparison (Zboží.cz), run inside Sklik.', 'Fewer shoppers than Heureka. Minimum click price by price band.'], cs: ['Seznam Nákupy', 'Srovnávač Seznamu (Zboží.cz), spravuje se ve Skliku.', 'Méně nakupujících než Heureka. Minimální klik podle cenového pásma.'] },
+    glami: { en: ['Glami', 'Fashion search engine. Pay per click.', 'Only for fashion. Needs a feed and a pixel.'], cs: ['Glami', 'Módní vyhledávač. Platíš za klik.', 'Jen pro módu. Potřebuje feed a pixel.'] },
+    biano: { en: ['Biano', 'Home and furniture inspiration. Cheap clicks.', 'People browse for weeks. Few orders per click.'], cs: ['Biano', 'Inspirace pro bydlení. Levné kliky.', 'Lidé vybírají týdny. Málo objednávek na klik.'] },
+    criteo: { en: ['Criteo', 'Retargeting. Shows your products to past visitors.', 'Claims about twice what it really adds.'], cs: ['Criteo', 'Retargeting. Ukazuje produkty lidem, co už u tebe byli.', 'Hlásí zhruba dvakrát víc, než skutečně přinese.'] },
+    email: { en: ['Email', 'Newsletters and automations to your own list.', 'You pay per contact. Too many sends cause unsubscribes.'], cs: ['E-mail', 'Newslettery a automatizace na vlastní seznam.', 'Platíš za kontakt. Moc e-mailů znamená odhlášky.'] },
+    affiliate: { en: ['Affiliate', 'Partner sites send buyers. You pay per sale.', 'Coupon sites take credit for your existing customers.'], cs: ['Affiliate', 'Partnerské weby posílají zákazníky. Platíš za prodej.', 'Kupónové weby si připíšou i tvé stávající zákazníky.'] },
+    market: { en: ['Marketplaces', 'Sell on Allegro or Kaufland. Commission per sale.', 'The customer and their email belong to the marketplace.'], cs: ['Tržiště', 'Prodej na Allegru nebo Kauflandu. Provize z prodeje.', 'Zákazník i jeho e-mail patří tržišti.'] }
+  };
+  var BADGE = { google: 'G', sklik: 'S', pmax: 'PM', meta: 'M', tiktok: 'TT', heureka: 'H', nakupy: 'N', glami: 'GL', biano: 'B', criteo: 'C', email: '@', affiliate: 'A', market: 'TR' };
+  var ROLEVAR = { search: '--r-search', aware: '--r-aware', compare: '--r-compare', retarget: '--r-retarget', retain: '--r-retain', sale: '--r-sale' };
+  var EFFORT = { google: 'M', sklik: 'L', pmax: 'M', meta: 'M', tiktok: 'H', heureka: 'L', nakupy: 'L', glami: 'L', biano: 'L', criteo: 'M', email: 'M', affiliate: 'M', market: 'H' };
+  var ICON = {
+    fashion: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 4l5 3 5-3 7 5-3 5-3-2v16H10V12l-3 2-3-5z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>',
+    home: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 18v-5a3 3 0 013-3h16a3 3 0 013 3v5M3 18h26v6H3zM6 24v3M26 24v3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+    electronics: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 7h24v15H4zM12 27h8M16 22v5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+    service: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 4a6 6 0 00-5.6 8.2L5 21.6 10.4 27l9.4-9.4A6 6 0 0028 12l-4 1-3-3 1-4z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>'
+  };
+  var LOGO = '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="36" height="36" rx="11" fill="var(--brand)" stroke="var(--edge)" stroke-width="2.5"/><path d="M7 17c4-3 9-3 13 0 4-3 9-3 13 0-1 5-5 7-8 6-2-1-3-3-5-3s-3 2-5 3c-3 1-7-1-8-6z" fill="var(--ink)"/><circle cx="14" cy="18.5" r="2" fill="var(--brand)"/><circle cx="26" cy="18.5" r="2" fill="var(--brand)"/><path d="M13 28c4 2 10 2 14 0" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
+
+  /* ---------- Helpers ---------- */
+  function t(key, vars) {
+    var s = (T[lang] && T[lang][key]) || T.en[key] || key;
+    if (vars) Object.keys(vars).forEach(function (k) { s = s.split('{' + k + '}').join(vars[k]); });
+    return s;
+  }
+  function locale() { return lang === 'cs' ? 'cs-CZ' : 'en-GB'; }
+  function nf(n, d) { return new Intl.NumberFormat(locale(), { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }).format(n); }
+  function kc(n) { return nf(Math.round(n)) + ' Kč'; }
+  function signed(n, fn) { var r = Math.round(n); var s = (fn || kc)(Math.abs(r)); return r > 0 ? '+' + s : (r < 0 ? '−' + s : s); }
+  function short(n) {
+    var a = Math.abs(n), s;
+    if (a < 1000) s = nf(a);
+    else if (a < 1e6) s = nf(a / 1000, a < 10000 && a % 1000 !== 0 ? 1 : 0) + 'k';
+    else s = nf(a / 1e6, 1) + (lang === 'cs' ? ' mil.' : 'M');
+    return (n < 0 ? '−' : '') + s;
+  }
+  function sshort(n) { return (Math.round(n) > 0 ? '+' : '') + short(Math.round(n)); }
+  function pct(x, d) { return nf(x * 100, d === undefined ? 0 : d) + (lang === 'cs' ? ' %' : '%'); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function monthName(i) {
+    var s = new Intl.DateTimeFormat(locale(), { month: 'long' }).format(new Date(2026, i, 1));
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  function monthShort(i) {
+    var s = new Intl.DateTimeFormat(locale(), { month: 'short' }).format(new Date(2026, i, 1)).replace('.', '');
+    return s.charAt(0).toUpperCase() + s.slice(0, 3).slice(1);
+  }
+  function toolName(id) { return TOOLTXT[id][lang][0]; }
+  function roleOf(id) { return E.TOOLS[id].role; }
+  function colorOf(id) { return 'var(' + ROLEVAR[roleOf(id)] + ')'; }
+  function reduced() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  function dayNumber(d) { return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(2026, 0, 1)) / 86400000) + 1; }
+  function dailySeed(d) { return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+  function unitWord(n) { var p = S.g && E.PROFILES[S.g.profile]; return t(p && !p.eshop ? 'chip_jobs' : 'chip_orders', { n: nf(n) }); }
+
+  /* ---------- App state ---------- */
+  var root = document.getElementById('root');
+  var layer = document.getElementById('layer');
+  var S = {
+    screen: 'start', pick: { profile: store.profile || 'home', size: store.size || 'm', mode: 'daily' },
+    g: null, playing: false, timer: null, decision: null, monthStarted: false,
+    lastTip: -99, tipsShown: {}, capWarned: {}, sheet: null, speed: null, prevCash: 0, cashShown: 0
+  };
+
+  function setLang(l) {
+    lang = l; store.lang = l; saveStore();
+    document.documentElement.lang = l;
+    render();
+    if (S.sheet === '__data') openData();
+    else if (S.sheet) openSheet(S.sheet);
+  }
+  document.documentElement.lang = lang;
+
+  /* ---------- Render: start ---------- */
+  function render() {
+    if (S.screen === 'start') renderStart();
+    else if (S.screen === 'game') renderGame();
+    else renderEnd();
+  }
+
+  function langBtn() { return '<button class="icon-btn" type="button" data-act="lang" aria-label="' + esc(t('lang')) + '" style="padding-inline:12px">' + (lang === 'cs' ? 'EN' : 'CZ') + '</button>'; }
+
+  function renderStart() {
+    var today = new Date();
+    var tiles = ['fashion', 'home', 'electronics', 'service'].map(function (id) {
+      var p = E.PROFILES[id];
+      return '<button type="button" class="box tile" data-act="pick-profile" data-v="' + id + '" aria-pressed="' + (S.pick.profile === id) + '">' +
+        ICON[id] + '<b>' + esc(t('biz_' + id)) + '</b><span class="mini">' + esc(t('sub_' + id, { aov: short(p.aov) + ' Kč', m: pct(p.margin) })) + '</span></button>';
+    }).join('');
+    var sizes = ['s', 'm', 'l'].map(function (k) {
+      return '<button type="button" data-act="pick-size" data-v="' + k + '" aria-pressed="' + (S.pick.size === k) + '">' + esc(t('size_' + k)) + '</button>';
+    }).join('');
+    var modes = '<button type="button" data-act="pick-mode" data-v="daily" aria-pressed="' + (S.pick.mode === 'daily') + '">' + esc(t('daily', { n: dayNumber(today) })) + '</button>' +
+      '<button type="button" data-act="pick-mode" data-v="free" aria-pressed="' + (S.pick.mode === 'free') + '">' + esc(t('free')) + '</button>';
+    var strip = E.ORDER.map(function (id) {
+      return '<span class="chip plain" style="color:var(--ink);border-color:' + colorOf(id) + '">' + esc(toolName(id)) + '</span>';
+    }).join('');
+    var bestKey = S.pick.profile + '-' + S.pick.size;
+    var best = store.best[bestKey];
+    root.innerHTML =
+      '<div class="topline"><span class="logo">' + LOGO + 'Budget Bandit</span><span class="bar-tools">' + langBtn() +
+      '<button class="icon-btn" type="button" data-act="data" style="padding-inline:12px">' + esc(t('sources')) + '</button></span></div>' +
+      '<section class="hero"><h1>' + esc(t('tagline')) + '</h1><div class="tool-strip">' + strip + '</div></section>' +
+      '<div class="pick-title">' + esc(t('pickBiz')) + '</div><div class="tiles">' + tiles + '</div>' +
+      '<div class="pick-title">' + esc(t('pickSize')) + '</div><div class="seg" role="group">' + sizes + '</div>' +
+      '<div class="pick-title">' + esc(t('pickMode')) + '</div><div class="seg" role="group">' + modes + '</div>' +
+      '<div class="start-row"><button type="button" class="btn primary big" data-act="start">' + esc(t('start')) + ' →</button>' +
+      (best !== undefined ? '<span class="best">' + esc(t('best', { v: signed(best) })) + '</span>' : '') + '</div>';
+  }
+
+  /* ---------- Render: game ---------- */
+  function renderGame() {
+    var g = S.g;
+    root.innerHTML =
+      '<div class="game">' +
+        '<header class="box bar">' +
+          '<div class="cash"><small>' + esc(t('cash')) + '</small><strong id="cash" class="num">' + kc(g.cash) + '</strong></div>' +
+          '<div class="months" id="months" aria-hidden="true"></div>' +
+          '<div class="bar-tools">' + langBtn() + '<button class="icon-btn" type="button" data-act="data" style="padding-inline:12px">' + esc(t('sources')) + '</button></div>' +
+        '</header>' +
+        '<section class="board">' +
+          '<div class="meters" id="meters"></div>' +
+          '<div class="box spark desk-only"><div class="k">' + esc(t('cashLine')) + '</div><svg id="spark" viewBox="0 0 480 92" preserveAspectRatio="none" role="img" aria-label="' + esc(t('cashLine')) + '"></svg></div>' +
+          '<div class="playzone playbar desk-only" id="playzone-d"></div>' +
+        '</section>' +
+        '<section class="box feedbox" aria-label="' + esc(t('chat')) + '">' +
+          '<div class="feedhead"><span>' + esc(t('chat')) + '</span><span class="chip plain" id="weekchip"></span></div>' +
+          '<div class="feed" id="feed" role="log" aria-live="polite"></div>' +
+          '<div class="replies" id="replies"></div>' +
+        '</section>' +
+        '<section class="toolscol"><div class="dock" id="dock"></div></section>' +
+        '<div class="playzone playbar phone-only" id="playzone-m"></div>' +
+      '</div>';
+    S.feedEl = document.getElementById('feed');
+    S.feedLog.forEach(function (m) { S.feedEl.appendChild(msgNode(m)); });
+    S.feedEl.scrollTop = S.feedEl.scrollHeight;
+    S.cashShown = g.cash;
+    updateAll();
+    if (S.decision) showDecision(S.decision, true);
+  }
+
+  function updateAll() {
+    renderDock(); renderMeters(); renderMonths(); renderSpark(); renderControls();
+    var cashEl = document.getElementById('cash');
+    if (cashEl) cashEl.textContent = kc(S.g.cash);
+  }
+
+  function last4(id) {
+    var g = S.g, out = { spend: 0, rev: 0, claimRev: 0, orders: 0 };
+    g.weeks.slice(-4).forEach(function (w) {
+      var r = w.tools[id];
+      if (!r) return;
+      out.spend += r.spend; out.rev += r.rev; out.claimRev += r.claimRev; out.orders += r.orders + (r.halo || 0);
+    });
+    return out;
+  }
+
+  function cardState(id) {
+    var g = S.g, tool = E.TOOLS[id];
+    if (tool.needs && !E.isReady(g, id)) {
+      if (g.ready[tool.needs] !== null) return { locked: true, label: t('readySoon') };
+      return { locked: true, label: t('locked', { x: t('need_' + tool.needs) }) };
+    }
+    if (id === 'email') { var on = g.email.freq > 0 || g.ready.flows !== null; return { off: !on, label: t('f' + g.email.freq) + (g.ready.flows !== null ? ' +A' : '') }; }
+    if (id === 'affiliate') return { off: g.affiliate === 0, label: g.affiliate === 0 ? t('off') : pct(g.affiliate) };
+    if (id === 'market') return { off: !g.market, label: g.market ? t('on') : t('off') };
+    var b = g.budgets[id] || 0;
+    return { off: b === 0, label: b === 0 ? t('off') : short(b) + t('perMonth') };
+  }
+
+  function renderDock() {
+    var g = S.g, p = E.PROFILES[g.profile];
+    var html = E.available(g.profile).map(function (id) {
+      var st = cardState(id), l4 = last4(id);
+      var res = '';
+      if (l4.spend > 0 || l4.rev > 0) {
+        var profit = l4.rev * p.margin - l4.spend;
+        res = '<span class="res ' + (profit >= 0 ? 'good' : 'bad') + '">' + (profit >= 0 ? '▲ ' : '▼ ') + esc(t('res4', { p: sshort(profit) })) + '</span>';
+      } else res = '<span class="res muted">—</span>';
+      return '<button type="button" class="box tool' + (st.locked ? ' locked' : '') + (st.off ? ' off' : '') + '" data-act="tool" data-v="' + id + '" style="--c:' + colorOf(id) + '" aria-label="' + esc(toolName(id) + ', ' + st.label) + '">' +
+        '<span class="top"><span class="badge">' + BADGE[id] + '</span><span class="nm"><span class="name">' + esc(toolName(id)) + '</span><span class="role">' + esc(t('role_' + roleOf(id))) + '</span></span></span>' +
+        '<span class="budget">' + esc(st.label) + '</span>' + res + '</button>';
+    }).join('');
+    document.getElementById('dock').innerHTML = html;
+  }
+
+  function renderMeters() {
+    var g = S.g, p = E.PROFILES[g.profile];
+    var pool = g.pool.reduce(function (a, b) { return a + b; }, 0);
+    var scale = g.s * p.reach;
+    var items = [
+      { k: t('buzz'), v: g.buzz, max: 400 * scale, unit: t('buzzUnit'), c: 'var(--r-aware)' },
+      { k: t('pool'), v: pool, max: 60000 * scale, unit: t('poolUnit'), c: 'var(--r-retarget)' },
+      { k: t('list'), v: g.list, max: Math.max(g.list, p.list * g.s * 3), unit: t('listUnit'), c: 'var(--r-retain)' }
+    ];
+    document.getElementById('meters').innerHTML = items.map(function (it) {
+      var w = Math.max(0, Math.min(100, it.v / it.max * 100));
+      return '<div class="box meter" role="meter" aria-valuemin="0" aria-valuemax="' + Math.round(it.max) + '" aria-valuenow="' + Math.round(it.v) + '" aria-valuetext="' + esc(nf(Math.round(it.v)) + ' ' + it.unit) + '">' +
+        '<span class="k">' + esc(it.k) + '</span><span class="v">' + short(Math.round(it.v)) + '</span>' +
+        '<span class="track"><span class="fill" style="display:block;--c:' + it.c + ';width:' + w.toFixed(1) + '%"></span></span></div>';
+    }).join('');
+  }
+
+  function renderMonths() {
+    var g = S.g, cur = Math.floor(g.week / 4);
+    var html = '';
+    for (var i = 0; i < 12; i++) {
+      var m = g.months[i];
+      var cls = m ? (m.stars === 0 ? 'mcell lost' : 'mcell done') : (i === cur && !g.over ? 'mcell now' : 'mcell');
+      var label = m ? (m.stars ? '★'.repeat(m.stars) : '✕') : monthShort(i).slice(0, 1);
+      html += '<span class="' + cls + '" title="' + esc(monthName(i)) + '">' + label + '</span>';
+    }
+    document.getElementById('months').innerHTML = html;
+  }
+
+  function renderSpark() {
+    var svg = document.getElementById('spark');
+    if (!svg) return;
+    var g = S.g, pts = [g.startCash].concat(g.weeks.map(function (w) { return w.cashAfter; }));
+    var min = Math.min.apply(null, pts.concat([0])), max = Math.max.apply(null, pts.concat([g.startCash * 1.2]));
+    var W = 480, H = 92, pad = 6;
+    function x(i) { return pad + (W - 2 * pad) * i / 48; }
+    function y(v) { return H - pad - (H - 2 * pad) * (v - min) / ((max - min) || 1); }
+    var d = pts.map(function (v, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+    var last = pts[pts.length - 1];
+    svg.innerHTML =
+      '<line x1="0" x2="' + W + '" y1="' + y(0).toFixed(1) + '" y2="' + y(0).toFixed(1) + '" stroke="var(--soft)" stroke-width="2" stroke-dasharray="4 4"/>' +
+      '<line x1="0" x2="' + W + '" y1="' + y(g.startCash).toFixed(1) + '" y2="' + y(g.startCash).toFixed(1) + '" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 4"/>' +
+      '<path d="' + d + '" fill="none" stroke="' + (last >= g.startCash ? 'var(--good)' : 'var(--bad)') + '" stroke-width="3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
+      '<circle cx="' + x(pts.length - 1).toFixed(1) + '" cy="' + y(last).toFixed(1) + '" r="4.5" fill="var(--ink)"/>';
+  }
+
+  function renderControls() {
+    var g = S.g;
+    var m = Math.min(11, Math.floor(g.week / 4));
+    var label, act;
+    if (S.playing) { label = '❚❚ ' + t('pause'); act = 'pause'; }
+    else if (g.week % 4 === 0) { label = '▶ ' + t('play', { m: monthName(m) }); act = 'play'; }
+    else { label = '▶ ' + t('resume'); act = 'play'; }
+    var weekTxt = t('week', { w: (g.week % 4) + 1 });
+    var html = '<div class="weekline"><span>' + esc(monthName(m)) + '</span><span>' + esc(weekTxt) + '</span></div>' +
+      '<button type="button" class="btn primary big" data-act="' + act + '"' + (S.decision || g.over ? ' disabled' : '') + '>' + esc(label) + '</button>';
+    ['playzone-d', 'playzone-m'].forEach(function (id) { var el = document.getElementById(id); if (el) el.innerHTML = html; });
+    var wc = document.getElementById('weekchip');
+    if (wc) wc.textContent = monthName(m) + ' · ' + weekTxt;
+  }
+
+  /* ---------- Feed ---------- */
+  S.feedLog = [];
+  function whoInfo(who) {
+    if (E.TOOLS[who]) return { name: toolName(who), ini: BADGE[who], c: colorOf(who) };
+    var map = {
+      petra: { name: t('who_petra'), ini: 'P', c: 'var(--r-retarget)' },
+      tomas: { name: t('who_tomas'), ini: 'T', c: 'var(--r-retain)' },
+      acct: { name: t('who_acct'), ini: lang === 'cs' ? 'Ú' : 'A', c: 'var(--r-search)' },
+      customer: { name: t('who_customer'), ini: '☺', c: 'var(--r-compare)' }
+    };
+    return map[who] || map.petra;
+  }
+  function msgNode(m) {
+    var el = document.createElement('div');
+    if (m.kind === 'stamp') {
+      el.className = 'stamp';
+      el.innerHTML = '<b>' + esc(m.title) + '</b><span class="stars" aria-label="' + m.stars + ' / 3">' + '★'.repeat(m.stars) + '☆'.repeat(3 - m.stars) + '</span><span class="' + (m.profit >= 0 ? 'good' : 'bad') + '" style="font-weight:800">' + esc(t('month_profit', { v: signed(m.profit) })) + '</span>';
+      return el;
+    }
+    if (m.kind === 'me') {
+      el.className = 'msg me';
+      el.innerHTML = '<div class="bubble"><span class="txt">' + esc(m.text) + '</span></div>';
+      return el;
+    }
+    var w = whoInfo(m.who);
+    el.className = 'msg' + (m.kind === 'boss' ? ' boss' : '');
+    el.innerHTML = '<span class="av" style="--c:' + w.c + '" aria-hidden="true">' + esc(w.ini) + '</span>' +
+      '<div class="bubble"><span class="who">' + esc(w.name) + '</span><span class="txt">' + esc(m.text) + '</span></div>' +
+      (m.chip ? '<span class="chip ' + (m.tone || 'plain') + '">' + esc(m.chip) + '</span>' : '<span></span>');
+    return el;
+  }
+  function push(m) {
+    S.feedLog.push(m);
+    if (S.feedLog.length > 80) S.feedLog.shift();
+    if (!S.feedEl) return;
+    S.feedEl.appendChild(msgNode(m));
+    while (S.feedEl.children.length > 80) S.feedEl.removeChild(S.feedEl.firstChild);
+    S.feedEl.scrollTop = S.feedEl.scrollHeight;
+  }
+
+  /* Pick at most two messages per week by priority: decision > boss > bad > good > tip. */
+  var PRI = { boss: 4, bad: 3, good: 2, tip: 1 };
+  function weekMessages(R) {
+    var g = S.g, p = E.PROFILES[g.profile], out = [];
+    R.events.forEach(function (ev) {
+      if (ev === 'ios') out.push({ pri: 'boss', who: 'meta', text: t('m_ios'), chip: t('chip_rep'), tone: 'warn' });
+      if (ev === 'surge') out.push({ pri: 'bad', who: 'google', text: t('m_surge'), chip: t('chip_cpc'), tone: 'bad' });
+      if (ev === 'viral') out.push({ pri: 'boss', who: 'tiktok', text: t('m_viral'), chip: t('chip_buzz'), tone: 'good' });
+      if (ev === 'bf') out.push({ pri: 'boss', who: 'tomas', text: t('m_bf'), chip: unitWord(R.orders), tone: 'good' });
+      if (ev === 'bailout') out.push({ pri: 'boss', who: 'acct', text: t('m_bailout'), chip: signed(3 * g.fixedMonth * g.s), tone: 'warn' });
+      if (ev === 'bankrupt') out.push({ pri: 'boss', who: 'acct', text: t('m_bankrupt'), chip: kc(g.cash), tone: 'bad' });
+    });
+    Object.keys(R.tools).forEach(function (id) {
+      var r = R.tools[id];
+      if (r.capped && !S.capWarned[id + R.month]) { S.capWarned[id + R.month] = 1; out.push({ pri: 'bad', who: id, text: t('m_cap'), chip: t('chip_max'), tone: 'warn' }); }
+    });
+    var prev = g.weeks.slice(-5, -1);
+    if (prev.length === 4 && R.week !== E.BF_WEEK) {
+      var avg = prev.reduce(function (a, w) { return a + w.orders; }, 0) / 4;
+      if (avg > 0 && R.orders >= avg * 1.35 && R.orders - avg >= 3) out.push({ pri: 'good', who: 'tomas', text: t('m_busy'), chip: unitWord(R.orders), tone: 'good' });
+    }
+    if (R.week % 4 === 1) {
+      ['meta', 'pmax'].forEach(function (id) {
+        var r = R.tools[id];
+        if (r && r.spend > 0 && g.conv[id] < 50) out.push({ pri: 'tip', who: 'petra', text: t('m_learn', { t: toolName(id) }), chip: t('chip_learn', { n: nf(Math.min(50, g.conv[id])) }), tone: 'info' });
+      });
+    }
+    ['tiktok', 'meta'].forEach(function (id) {
+      var r = R.tools[id];
+      if (r && r.halo >= 1 && !S.tipsShown['saw' + id + R.month] && Math.random() < 0.25) {
+        S.tipsShown['saw' + id + R.month] = 1;
+        out.push({ pri: 'good', who: 'customer', text: t('m_saw', { t: toolName(id) }), chip: t('chip_buzz'), tone: 'good' });
+      }
+    });
+    // Tips: at most one every 4 weeks
+    if (R.week - S.lastTip >= 4) {
+      var tip = null;
+      if (!tip && p.eshop && g.ready.feed === null && R.week >= 2) tip = { who: 'petra', text: t('tip_feed'), chip: t('chip_tools'), tone: 'info' };
+      if (!tip && g.email.freq === 0 && R.week >= 5) tip = { who: 'petra', text: t('tip_email'), chip: short(g.list) + ' ' + t('listUnit'), tone: 'info' };
+      if (!tip && R.tools.criteo && R.tools.criteo.spend > 0 && !S.tipsShown.criteo) { S.tipsShown.criteo = 1; tip = { who: 'petra', text: t('tip_criteo'), chip: '×2', tone: 'warn' }; }
+      if (!tip && g.weeks.length > 6) {
+        var b4 = g.weeks[g.weeks.length - 5];
+        var awareOff = !(g.budgets.meta > 0) && !(g.budgets.tiktok > 0 && E.isReady(g, 'tiktok'));
+        if (awareOff && b4 && b4.brandOrders > 2 && R.brandOrders < b4.brandOrders * 0.7) tip = { who: 'petra', text: t('tip_buzz'), chip: t('chip_drop', { p: pct(1 - R.brandOrders / b4.brandOrders) }), tone: 'warn' };
+      }
+      if (tip) { tip.pri = 'tip'; out.push(tip); S.lastTip = R.week; }
+    }
+    // Setup finished this week
+    ['feed', 'video', 'flows'].forEach(function (k) {
+      if (g.ready[k] === R.week + 1) out.push({ pri: 'good', who: 'petra', text: t('tip_ready', { x: k === 'feed' ? 'Feed' : (k === 'video' ? (lang === 'cs' ? 'Video' : 'Video') : t('flows')) }), chip: '✓', tone: 'good' });
+    });
+    out.sort(function (a, b) { return PRI[b.pri] - PRI[a.pri]; });
+    return out.slice(0, 2).map(function (m) { m.kind = m.pri === 'boss' ? 'boss' : 'msg'; return m; });
+  }
+
+  function monthMessages(m) {
+    var g = S.g, p = E.PROFILES[g.profile], out = [];
+    out.push({ kind: 'stamp', title: monthName(m.month), stars: m.stars, profit: m.net });
+    var claim = 0, real = 0, best = null, worst = null;
+    Object.keys(m.tools).forEach(function (id) {
+      var a = m.tools[id];
+      claim += a.claimRev; real += a.rev;
+      if (a.spend > 0) {
+        var pr = a.rev * p.margin - a.spend;
+        if (!best || pr > best.pr) best = { id: id, pr: pr, pno: a.rev > 0 ? a.spend / a.rev : null };
+        if (!worst || pr < worst.pr) worst = { id: id, pr: pr };
+      }
+    });
+    if (claim > 0) out.push({ kind: 'msg', who: 'acct', text: t('m_claim', { a: short(claim) + ' Kč', b: short(real) + ' Kč' }), chip: '×' + nf(claim / Math.max(1, real), 1), tone: 'warn' });
+    if (best && best.pr > 0) out.push({ kind: 'msg', who: 'petra', text: t('m_fire', { t: toolName(best.id) }), chip: 'PNO ' + (best.pno !== null ? pct(best.pno) : '—'), tone: 'good' });
+    if (worst && worst.pr < 0) out.push({ kind: 'msg', who: 'acct', text: t('m_lost', { t: toolName(worst.id) }), chip: signed(worst.pr), tone: 'bad' });
+    return out;
+  }
+
+  /* ---------- Decisions ---------- */
+  function decisionCopy(d) {
+    var who = 'petra', text, opts;
+    if (d.type === 'influencer') { text = t('d_infl'); opts = [['yes', t('o_yes'), short(d.cost) + ' Kč'], ['no', t('o_no'), '']]; }
+    if (d.type === 'pricewar') { who = 'heureka'; text = t('d_war'); opts = [['match', t('o_match'), t('s_margin')], ['keep', t('o_keep'), t('s_conv')]]; }
+    if (d.type === 'blackfriday') { text = t('d_bf'); opts = [['all', t('o_all'), t('s_x2')], ['search', t('o_search'), t('s_x2s')], ['skip', t('o_skip'), '']]; }
+    if (d.type === 'cutoff') { who = 'tomas'; text = t('d_cutoff'); opts = [['pause', t('o_pause'), ''], ['keep', t('o_keepgoing'), '']]; }
+    if (d.type === 'creatives') { text = t('d_cr', { t: toolName(d.tool) }); opts = [['yes', t('o_yes'), short(d.cost) + ' Kč'], ['no', t('o_later'), '']]; }
+    return { who: who, text: text, opts: opts };
+  }
+  function showDecision(d, redraw) {
+    S.decision = d;
+    var c = decisionCopy(d);
+    if (!redraw) push({ kind: 'boss', who: c.who, text: c.text, chip: '?', tone: 'warn' });
+    var box = document.getElementById('replies');
+    if (box) {
+      box.innerHTML = c.opts.map(function (o) {
+        return '<button type="button" class="btn" data-act="decide" data-v="' + o[0] + '">' + esc(o[1]) + (o[2] ? '<small>' + esc(o[2]) + '</small>' : '') + '</button>';
+      }).join('');
+      var first = box.querySelector('button');
+      if (first && !redraw) first.focus({ preventScroll: true });
+    }
+    renderControls();
+  }
+  function answer(choice) {
+    var d = S.decision;
+    if (!d) return;
+    var c = decisionCopy(d);
+    var opt = c.opts.filter(function (o) { return o[0] === choice; })[0];
+    E.decide(S.g, d, choice);
+    push({ kind: 'me', text: opt ? opt[1] : choice });
+    S.decision = null;
+    var box = document.getElementById('replies');
+    if (box) box.innerHTML = '';
+    updateAll();
+    S.playing = true;
+    renderControls();
+    tick();
+  }
+
+  /* ---------- Game loop ---------- */
+  function startGame() {
+    var pk = S.pick;
+    store.profile = pk.profile; store.size = pk.size; saveStore();
+    var today = new Date();
+    var seed = pk.mode === 'daily' ? dailySeed(today) : Math.floor(Math.random() * 4294967296);
+    S.g = E.newGame({ profile: pk.profile, size: pk.size, seed: seed, daily: pk.mode === 'daily' });
+    S.g.dayNo = dayNumber(today);
+    S.playing = false; S.decision = null; S.monthStarted = false; S.lastTip = -99; S.tipsShown = {}; S.capWarned = {};
+    S.feedLog = [];
+    S.screen = 'game';
+    render();
+    push({ kind: 'msg', who: 'petra', text: t('m_hello'), chip: '3', tone: 'info' });
+    push({ kind: 'msg', who: 'petra', text: t('m_tap') });
+    push({ kind: 'msg', who: 'petra', text: t('m_press'), chip: '▶', tone: 'info' });
+  }
+
+  function play() {
+    var g = S.g;
+    if (!g || g.over || S.decision || S.playing) return;
+    if (!S.monthStarted) {
+      var before = {};
+      ['meta', 'pmax', 'tiktok'].forEach(function (id) { before[id] = g.swing[id]; });
+      E.startMonth(g);
+      ['meta', 'pmax', 'tiktok'].forEach(function (id) {
+        if (g.swing[id] > before[id]) push({ kind: 'msg', who: 'petra', text: t('m_swing', { t: toolName(id) }), chip: '−15 %', tone: 'warn' });
+      });
+      S.monthStarted = true;
+    }
+    S.playing = true;
+    renderControls();
+    tick();
+  }
+  function pause() {
+    S.playing = false;
+    clearTimeout(S.timer);
+    renderControls();
+  }
+  function tickDelay() { return S.speed !== null ? S.speed : (reduced() ? 450 : 1000); }
+  function tick() {
+    clearTimeout(S.timer);
+    if (!S.playing || !S.g) return;
+    var r = E.stepWeek(S.g);
+    if (!r) { S.playing = false; finish(); return; }
+    if (r.decision) { S.playing = false; showDecision(r.decision); return; }
+    onWeek(r.week);
+    if (S.g.over) { S.playing = false; renderControls(); S.timer = setTimeout(finish, S.speed !== null ? 0 : 1200); return; }
+    if (r.week.monthEnd) { S.playing = false; S.monthStarted = false; renderControls(); return; }
+    S.timer = setTimeout(tick, tickDelay());
+  }
+  function onWeek(R) {
+    weekMessages(R).forEach(push);
+    if (R.monthEnd) monthMessages(R.monthEnd).forEach(push);
+    animateCash(R.cashAfter);
+    renderDock(); renderMeters(); renderMonths(); renderSpark(); renderControls();
+    if (!reduced()) {
+      Object.keys(R.tools).forEach(function (id) {
+        var r = R.tools[id], n = Math.round(r.orders + (r.halo || 0));
+        if (n <= 0) return;
+        var card = document.querySelector('.tool[data-v="' + id + '"]');
+        if (!card) return;
+        card.classList.add('bump');
+        var f = document.createElement('span');
+        f.className = 'float';
+        f.textContent = '+' + n;
+        card.appendChild(f);
+      });
+    }
+  }
+  function animateCash(to) {
+    var el = document.getElementById('cash');
+    if (!el) return;
+    var from = S.cashShown, t0 = null, dur = reduced() || S.speed !== null ? 0 : 600;
+    S.cashShown = to;
+    if (!dur) { el.textContent = kc(to); return; }
+    function stepAnim(ts) {
+      if (t0 === null) t0 = ts;
+      var k = Math.min(1, (ts - t0) / dur);
+      el.textContent = kc(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(stepAnim);
+    }
+    requestAnimationFrame(stepAnim);
+  }
+  function finish() {
+    var g = S.g;
+    if (!g) return;
+    var pr = E.profit(g);
+    if (g.over === 'done') {
+      var key = g.profile + '-' + g.sizeKey;
+      if (store.best[key] === undefined || pr > store.best[key]) { store.best[key] = Math.round(pr); saveStore(); }
+    }
+    closeSheet();
+    S.screen = 'end';
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Tool sheet ---------- */
+  function openSheet(id) {
+    S.sheet = id;
+    var g = S.g, p = E.PROFILES[g.profile], tool = E.TOOLS[id], txt = TOOLTXT[id][lang];
+    var editable = !S.playing && !g.over;
+    var facts = [], controls = '';
+    var cvr = (p.cvr[id] !== undefined) ? p.cvr[id] : tool.cvr;
+    if (E.PAID.indexOf(id) !== -1) {
+      var cpc = E.cpcFor(g, id, Math.min(g.week, 47));
+      facts.push('<span class="chip plain">' + esc(t('cpc', { v: nf(cpc, 2) + ' Kč' })) + '</span>');
+      facts.push('<span class="chip plain">' + esc(t('conv', { v: pct(cvr, 1) })) + '</span>');
+      facts.push('<span class="chip ' + (cvr * p.aov * p.margin > cpc ? 'good' : 'bad') + '">' + esc(t('maxcpc', { v: nf(cvr * p.aov * p.margin, 2) + ' Kč' })) + '</span>');
+      if (tool.needs && !E.isReady(g, id)) {
+        if (g.ready[tool.needs] !== null) controls = '<p class="line">' + esc(t('readySoon')) + '</p>';
+        else controls = '<button type="button" class="btn primary" data-act="setup" data-v="' + tool.needs + '"' + (editable ? '' : ' disabled') + '>' + esc(t('setupBtn', { x: t('need_' + tool.needs), c: short(E.SETUP[tool.needs]) + ' Kč' })) + '</button>';
+      } else {
+        controls = '<h3>' + esc(t('budgetMonth')) + '</h3><div class="seg" role="group">' + E.budgetSteps(g.s).map(function (v) {
+          return '<button type="button" data-act="budget" data-tool="' + id + '" data-v="' + v + '" aria-pressed="' + ((g.budgets[id] || 0) === v) + '"' + (editable ? '' : ' disabled') + '>' + (v === 0 ? esc(t('off')) : short(v)) + '</button>';
+        }).join('') + '</div>';
+      }
+    } else if (id === 'email') {
+      facts.push('<span class="chip plain">' + esc(t('costContact', { v: nf(0.3, 2) + ' Kč' })) + '</span>');
+      facts.push('<span class="chip plain">' + esc(t('orderRate', { v: pct(0.0016, 2) })) + '</span>');
+      controls = '<h3>' + esc(t('emailFreq')) + '</h3><div class="seg" role="group">' + [0, 1, 2, 3].map(function (f) {
+        return '<button type="button" data-act="freq" data-v="' + f + '" aria-pressed="' + (g.email.freq === f) + '"' + (editable ? '' : ' disabled') + '>' + esc(t('f' + f)) + '</button>';
+      }).join('') + '</div><h3>' + esc(t('flows')) + '</h3>' + (g.ready.flows !== null ? '<p class="line good">✓ ' + esc(t('flowsOn')) + '</p>' :
+        '<button type="button" class="btn" data-act="setup" data-v="flows"' + (editable ? '' : ' disabled') + '>' + esc(t('flowsBtn', { c: short(E.SETUP.flows) + ' Kč' })) + '</button>');
+    } else if (id === 'affiliate') {
+      facts.push('<span class="chip plain">' + esc(t('commission')) + ' 5–15 %</span>');
+      controls = '<h3>' + esc(t('commission')) + '</h3><div class="seg" role="group">' + E.AFFILIATE_STEPS.map(function (c) {
+        return '<button type="button" data-act="aff" data-v="' + c + '" aria-pressed="' + (g.affiliate === c) + '"' + (editable ? '' : ' disabled') + '>' + (c === 0 ? esc(t('off')) : pct(c)) + '</button>';
+      }).join('') + '</div>';
+    } else if (id === 'market') {
+      facts.push('<span class="chip plain">' + esc(t('marketFee', { v: pct(p.market) })) + '</span>');
+      controls = '<div class="seg" role="group" style="margin-top:12px">' + [false, true].map(function (on) {
+        return '<button type="button" data-act="market" data-v="' + on + '" aria-pressed="' + (g.market === on) + '"' + (editable ? '' : ' disabled') + '>' + esc(on ? t('on') : t('off')) + '</button>';
+      }).join('') + '</div>';
+    }
+    facts.push('<span class="chip info">' + esc(t('breakeven', { v: pct(p.margin) })) + '</span>');
+    facts.push('<span class="chip plain">' + esc(t('quality', { v: t('q_' + tool.q) })) + '</span>');
+    var l4 = last4(id);
+    var stats = '';
+    if (l4.spend > 0 || l4.rev > 0) {
+      stats = '<h3>' + esc(t('last4')) + '</h3><div class="stats">' +
+        '<div class="stat"><small>' + esc(t('spent')) + '</small><b>' + kc(l4.spend) + '</b></div>' +
+        '<div class="stat"><small>' + esc(t('realSales')) + '</small><b>' + kc(l4.rev) + '</b></div>' +
+        '<div class="stat"><small>' + esc(t('platformSays')) + '</small><b>' + kc(l4.claimRev) + '</b></div>' +
+        '<div class="stat"><small>' + esc(t('pnoReal')) + '</small><b class="' + (l4.rev > 0 && l4.spend / l4.rev <= p.margin ? 'good' : 'bad') + '">' + (l4.rev > 0 ? pct(l4.spend / l4.rev) : '—') + '</b></div>' +
+        '</div>';
+    }
+    layer.innerHTML =
+      '<div class="box sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" style="--c:' + colorOf(id) + '">' +
+        '<div class="sheet-head"><span class="badge">' + BADGE[id] + '</span><h2 id="sheet-title">' + esc(txt[0]) + '</h2><button type="button" class="icon-btn" data-act="close" aria-label="' + esc(t('close')) + '">✕</button></div>' +
+        '<span class="chip plain" style="color:var(--ink);border-color:var(--c)">' + esc(t('role_' + tool.role)) + '</span>' +
+        '<p class="line">' + esc(txt[1]) + '</p>' +
+        '<div class="watch"><b>' + esc(t('watch')) + ':</b> ' + esc(txt[2]) + '</div>' +
+        '<div class="facts">' + facts.join('') + '</div>' +
+        controls + (editable ? '' : '<p class="note">' + esc(t('pauseToEdit')) + '</p>') + stats +
+      '</div>';
+    layer.hidden = false;
+    var btn = layer.querySelector('[data-act="close"]');
+    if (btn) btn.focus({ preventScroll: true });
+  }
+  function closeSheet() {
+    var wasOpen = !!S.sheet;
+    S.sheet = null;
+    layer.hidden = true;
+    layer.innerHTML = '';
+    if (wasOpen && S.screen === 'game') renderDock();
+  }
+
+  function openData() {
+    S.sheet = '__data';
+    var src = SOURCES.map(function (s) {
+      return '<li><b>' + esc(s.name || t('season')) + '</b>: ' + esc(s[lang]) + '<br>' + s.links.map(function (l) { return '<a href="' + l[1] + '" target="_blank" rel="noopener noreferrer">' + esc(l[0]) + '</a>'; }).join(' · ') + '</li>';
+    }).join('');
+    var asm = ASSUME[lang].map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('');
+    layer.innerHTML = '<div class="box sheet" role="dialog" aria-modal="true" aria-labelledby="data-title">' +
+      '<div class="sheet-head"><h2 id="data-title">' + esc(t('dataTitle')) + '</h2><button type="button" class="icon-btn" data-act="close" aria-label="' + esc(t('close')) + '">✕</button></div>' +
+      '<p class="line">' + esc(t('dataIntro')) + '</p>' +
+      '<h3>' + esc(t('srcTitle')) + '</h3><ul class="sources">' + src + '</ul>' +
+      '<h3>' + esc(t('assumptions')) + '</h3><ul class="sources">' + asm + '</ul></div>';
+    layer.hidden = false;
+    var btn = layer.querySelector('[data-act="close"]');
+    if (btn) btn.focus({ preventScroll: true });
+  }
+
+  /* ---------- End screen ---------- */
+  function rankFor(stars, over) {
+    if (over === 'bankrupt') return t('bankruptTitle');
+    return t(stars >= 30 ? 'rank3' : (stars >= 20 ? 'rank2' : (stars >= 10 ? 'rank1' : 'rank0')));
+  }
+  function renderEnd() {
+    var g = S.g, p = E.PROFILES[g.profile];
+    var pr = E.profit(g);
+    var stars = g.months.reduce(function (a, m) { return a + m.stars; }, 0);
+    var rev = g.weeks.reduce(function (a, w) { return a + w.rev; }, 0);
+    var ads = g.weeks.reduce(function (a, w) { return a + w.costs; }, 0);
+    var vd = E.verdicts(g);
+    var claim = vd.reduce(function (a, v) { return a + v.claimRev; }, 0);
+    var real = vd.reduce(function (a, v) { return a + v.rev; }, 0);
+    var maxBar = Math.max(claim, real, 1);
+    var rows = vd.map(function (v) {
+      var exp = v.expectedPno;
+      var expTxt = isFinite(exp) ? nf(Math.max(1, Math.round(exp * 85))) + '–' + pct(exp * 1.2) : '—';
+      var dots = { M: '●●●', D: '●●○', L: '●○○', P: '●○○' }[v.q];
+      return '<div class="vrow"><span class="badge" style="--c:' + colorOf(v.id) + '">' + BADGE[v.id] + '</span>' +
+        '<span class="what"><b>' + esc(toolName(v.id)) + '</b><small>' + esc(t('expPno', { v: expTxt })) + ' · ' + esc(t('effort', { v: t('eff_' + EFFORT[v.id]) })) + ' · <span class="dots" aria-label="' + esc(t('quality', { v: t('q_' + v.q) })) + '">' + dots + '</span></small></span>' +
+        '<span class="verdict v-' + v.verdict + '">' + esc(t('v_' + v.verdict)) + '</span></div>';
+    }).join('');
+    var title = g.daily ? 'Budget Bandit #' + g.dayNo : 'Budget Bandit';
+    root.innerHTML =
+      '<div class="topline"><span class="logo">' + LOGO + esc(title) + '</span><span class="bar-tools">' + langBtn() + '<button class="icon-btn" type="button" data-act="data" style="padding-inline:12px">' + esc(t('sources')) + '</button></span></div>' +
+      '<div class="end" style="margin-top:14px">' +
+        '<section class="box end-hero"><span class="muted" style="font-weight:700">' + esc(t('yearDone')) + ' · ' + esc(t('biz_' + g.profile)) + ' · ' + esc(t('size_' + g.sizeKey)) + '</span>' +
+          '<span class="rank">' + esc(rankFor(stars, g.over)) + '</span><span class="stars" aria-label="' + stars + ' / 36">' + '★'.repeat(Math.round(stars / 3)) + '☆'.repeat(12 - Math.round(stars / 3)) + '</span></section>' +
+        '<div class="kpis">' +
+          '<div class="box kpi"><small>' + esc(t('profitYear')) + '</small><b class="' + (pr >= 0 ? 'good' : 'bad') + '">' + signed(pr) + '</b></div>' +
+          '<div class="box kpi"><small>' + esc(t('revenueYear')) + '</small><b>' + short(rev) + ' Kč</b></div>' +
+          '<div class="box kpi"><small>' + esc(t('pnoYear')) + '</small><b>' + (rev > 0 ? pct(ads / rev) : '—') + '</b></div>' +
+          '<div class="box kpi"><small>' + esc(t('starsK')) + '</small><b>' + stars + ' / 36</b></div>' +
+        '</div>' +
+        '<section class="box claimbar"><b style="font-family:var(--f-display);font-size:1.1rem">' + esc(t('claimTitle')) + '</b>' +
+          '<div class="cb-row"><span>' + esc(t('claimPlat')) + '</span><span class="cb-track"><span class="cb-fill" style="display:block;width:' + (claim / maxBar * 100).toFixed(1) + '%;background:var(--warn)"></span></span><span class="num">' + short(claim) + ' Kč</span></div>' +
+          '<div class="cb-row"><span>' + esc(t('claimReal')) + '</span><span class="cb-track"><span class="cb-fill" style="display:block;width:' + (real / maxBar * 100).toFixed(1) + '%;background:var(--good)"></span></span><span class="num">' + short(real) + ' Kč</span></div>' +
+          '<span class="muted" style="font-weight:600">' + esc(t('claimNote')) + '</span></section>' +
+        '<section class="box report"><h2 style="font:800 1.2rem/1.2 var(--f-display);margin:12px 0 4px">' + esc(t('reportTitle')) + '</h2>' + rows + '</section>' +
+        '<section class="box report"><h2 style="font:800 1.2rem/1.2 var(--f-display);margin:12px 0 4px">' + esc(t('askTitle')) + '</h2><ol class="qlist"><li>' + esc(t('ask1')) + '</li><li>' + esc(t('ask2')) + '</li><li>' + esc(t('ask3')) + '</li></ol></section>' +
+        '<div class="start-row" style="margin-top:4px"><button type="button" class="btn primary big" data-act="share" id="sharebtn">' + esc(t('share')) + '</button>' +
+          '<button type="button" class="btn big" data-act="again">' + esc(t('again')) + '</button>' +
+          '<button type="button" class="btn big" data-act="newbiz">' + esc(t('newBiz')) + '</button></div>' +
+        '<textarea id="sharetext" class="sr" aria-hidden="true" tabindex="-1"></textarea>' +
+      '</div>';
+  }
+  function shareText() {
+    var g = S.g, vd = E.verdicts(g);
+    var stars = g.months.reduce(function (a, m) { return a + m.stars; }, 0);
+    var sq = vd.map(function (v) { return v.used ? (v.verdict === 'keep' ? '🟩' : (v.verdict === 'tune' ? '🟨' : '🟥')) : '⬜'; }).join('');
+    return (g.daily ? 'Budget Bandit #' + g.dayNo : 'Budget Bandit') + ' · ' + t('biz_' + g.profile) + ' ' + t('size_' + g.sizeKey) + '\n' +
+      signed(E.profit(g)) + ' · ★' + stars + '/36 · ' + rankFor(stars, g.over) + '\n' + sq;
+  }
+  function doShare(btn) {
+    var text = shareText();
+    var done = function () { btn.textContent = t('copied') + ' ✓'; };
+    var fallback = function () {
+      var ta = document.getElementById('sharetext');
+      ta.value = text; ta.classList.remove('sr'); ta.style.width = '100%'; ta.style.minHeight = '90px'; ta.removeAttribute('aria-hidden');
+      ta.focus(); ta.select();
+    };
+    try {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } catch (e) { fallback(); }
+  }
+
+  /* ---------- Sources and assumptions ---------- */
+  var SOURCES = [
+    { name: 'ViVa marketing 2025', en: 'Czech cost per click: Google 10.61, Sklik 4.62, Facebook 9.51, Instagram 13.97, TikTok 4.73 Kč; Facebook for furniture/decor 5.48 and for trades 23.82 Kč.', cs: 'Česká cena za klik: Google 10,61, Sklik 4,62, Facebook 9,51, Instagram 13,97, TikTok 4,73 Kč; Facebook pro bydlení 5,48 a pro řemeslníky 23,82 Kč.', links: [['vivamarketing.cz', 'https://vivamarketing.cz/novinky/kolik-stoji-reklama-na-internetu-v-roce-2025/']] },
+    { name: 'Meta conversion', en: 'Conversion rate by category: apparel 4.11% (TrendTrack) and 1.46% (Triple Whale), electronics 1.20%.', cs: 'Konverzní poměr podle kategorie: oblečení 4,11 % (TrendTrack) a 1,46 % (Triple Whale), elektronika 1,20 %.', links: [['TrendTrack', 'https://www.trendtrack.io/blog-post/meta-ad-spend-by-industry'], ['Triple Whale', 'https://triplewhale.com/blog/facebook-ads-benchmarks']] },
+    { name: 'Google Ads, Shopping, PMax', en: 'E-commerce Google Ads median conversion 3.11%. Shopping and PMax click prices about 78% and 85% of Search; conversion Search 2.8%, Shopping 1.4%, PMax 1.9%.', cs: 'Medián konverze Google Ads v e-commerce 3,11 %. Klik v Shopping a PMax asi 78 % a 85 % ceny ve vyhledávání; konverze vyhledávání 2,8 %, Shopping 1,4 %, PMax 1,9 %.', links: [['Triple Whale', 'https://www.triplewhale.com/blog/google-ads-benchmarks'], ['TopGrowth', 'https://topgrowthmarketing.com/?p=46859'], ['Webtonic / COREPPC', 'https://www.webtonic.io/blog/e-commerce-google-ads-statistics']] },
+    { name: 'TikTok', en: 'EU average conversion 1.2%; median 1.56%. TikTok\'s own ROAS is systematically overstated.', cs: 'Průměrná konverze v EU 1,2 %; medián 1,56 %. Vlastní ROAS TikToku je soustavně nadsazené.', links: [['Fullmetrix', 'https://fullmetrix.com/en/blog/tiktok-ads-ecommerce-guide'], ['Triple Whale', 'https://www.triplewhale.com/blog/tiktok-benchmarks']] },
+    { name: 'Heureka', en: 'Click price set by category and product price; +25% Nov to Jan; examples 7.22–8.65 Kč. Comparison-site conversion 3–9% (we use 3%).', cs: 'Cena kliku podle kategorie a ceny produktu; +25 % od listopadu do ledna; příklady 7,22–8,65 Kč. Konverze ze srovnávačů 3–9 % (používáme 3 %).', links: [['Heureka', 'https://heureka.group/cs/pro-eshopy/ppc-rezim/cenik-prokliku']] },
+    { name: 'Seznam Nákupy (Zboží.cz)', en: 'From 1 Apr 2026 the minimum click price depends on category and 12 price bands, updated weekly. Old minimum 1.00–3.70 Kč.', cs: 'Od 1. 4. 2026 závisí minimální cena kliku na kategorii a 12 cenových pásmech, aktualizace týdně. Dřívější minimum 1,00–3,70 Kč.', links: [['Seznam blog', 'https://blog.seznam.cz/2026/03/novy-cenik-pro-seznam-nakupy-vice-detailu-a-presnejsi-cpc/'], ['Bidding Fox', 'https://www.bidding-fox.cz/zbozi-cz-dynamicky-cenik-2026']] },
+    { name: 'Glami, Biano', en: 'Glami: dynamic click price by price level, category and device. Biano: 1.50–8.00 Kč per click; ranking uses photos, bid and conversion.', cs: 'Glami: dynamická cena kliku podle cenové hladiny, kategorie a zařízení. Biano: 1,50–8,00 Kč za klik; pořadí podle fotek, nabídky a konverze.', links: [['Glami', 'https://help.glami.info/cs/jak%C3%A1-je-cena-cpc-cena-za-proklik'], ['Mergado', 'https://www.mergado.cz/blog/biano-nabizi-prostor-pro-inzerci-nabytku-bytoveho-vybaveni-a-jeste-neco-navic']] },
+    { name: 'Criteo / retargeting', en: 'Retargeting conversion 3.8%; up to 75% of retargeting conversions may not be extra sales. Click about 16 Kč ($0.76 at 21 Kč/USD).', cs: 'Konverze retargetingu 3,8 %; až 75 % konverzí nemusí být navíc. Klik asi 16 Kč (0,76 USD při 21 Kč/USD).', links: [['Searchlab', 'https://searchlab.nl/en/statistics/retargeting-statistics-2026']] },
+    { name: 'Email', en: 'Placed-order rate: campaigns 0.16%, automated flows 2.11% per recipient (Klaviyo benchmarks).', cs: 'Podíl objednávek: kampaně 0,16 %, automatizace 2,11 % na příjemce (benchmarky Klaviyo).', links: [['Klaviyo', 'https://www.klaviyo.com/products/email-marketing/benchmarks'], ['Summary', 'https://konabayev.com/blog/email-marketing-benchmarks-2026/']] },
+    { name: 'Affiliate', en: 'Czech commissions mostly 5–15%; Dognet March 2025 implies about 5.6% of turnover. Coupon and cashback sites get lower rates.', cs: 'České provize většinou 5–15 %; Dognet za březen 2025 vychází asi na 5,6 % obratu. Kupónové a cashback weby mají nižší sazby.', links: [['Dognet', 'https://www.dognet.cz/magazin/tajne-tipy/shrnuti-mesice-brezen-2025/']] },
+    { name: 'Marketplaces', en: 'Kaufland 4–16% by category (electronics 7%), fee from 39.95 EUR a month. Allegro 2–13.5%, 0% for new sellers for 180 days.', cs: 'Kaufland 4–16 % podle kategorie (elektronika 7 %), poplatek od 39,95 EUR měsíčně. Allegro 2–13,5 %, nováčci 180 dní 0 %.', links: [['Kaufland', 'https://www.kauflandglobalmarketplace.com/cs/conditions/'], ['Mergado', 'https://www.mergado.cz/blog/prodeje-marketplaces-pruvodce']] },
+    { name: 'Influencers', en: 'Nano creators 500–3,000 Kč a post, micro 3,000–15,000 Kč.', cs: 'Nano tvůrci 500–3 000 Kč za příspěvek, mikro 3 000–15 000 Kč.', links: [['infl.cz', 'https://infl.cz/influencer-marketing']] },
+    { name: null, en: 'Czech e-shops made 206 bn Kč in 2025. Black Friday week about 8.5 bn Kč (4% of the year). The Christmas season brings 30–40% of yearly turnover.', cs: 'České e-shopy utržily v roce 2025 206 mld. Kč. Týden Black Friday asi 8,5 mld. Kč (4 % roku). Vánoční sezóna přináší 30–40 % ročního obratu.', links: [['APEK', 'https://www.apek.cz/clanky/obraty-e-shopu-rostly-v-cr-mezirocne-o-6-v-roce'], ['ČTK', 'https://www.ceskenoviny.cz/zpravy/za-vyprodeje-black-friday-e-shopy-utrzily-85-miliardy-kc-mezirocne-vice/2753251'], ['Kurzy.cz', 'https://zpravy.kurzy.cz/836324-cesi-se-chystaji-na-svatecni-nakupy-e-shopy-ocekavaji-silnou-sezonu-prinese-az-40--rocniho-obratu/']] }
+  ];
+  var ASSUME = {
+    en: [
+      'Order value, margin, fixed costs and organic sales per business are planning assumptions.',
+      'Reach (how many shoppers a tool can bring) scales with business size and is a game choice.',
+      'Platforms over-report: Meta ×1.6, TikTok ×2, Criteo ×2, comparison sites ×1.1, email ×1.3. Search and PMax also claim brand searches. Illustrative, not measured.',
+      'Awareness creates brand searches; 6% of brand searchers buy. Buzz fades 25% a week.',
+      'Meta and PMax start at 60% efficiency and reach full speed after 50 orders. A budget swing over 50% costs 15% for 2 weeks.',
+      'Email costs 0.30 Kč per contact a month; each send loses 0.3% of the list (0.5% at 3× a week).',
+      'Affiliate: 60% of tracked sales are truly extra. Marketplaces: 5% price pressure on top of commission.',
+      'Setup costs: product feed 5,000 Kč, TikTok videos 10,000 Kč, email automations 8,000 Kč.',
+      'Prices exclude VAT. Results vary ±7% at random. Events in the daily challenge are the same for everyone.'
+    ],
+    cs: [
+      'Hodnota objednávky, marže, fixní náklady a organické prodeje jsou plánovací předpoklady.',
+      'Dosah (kolik zákazníků nástroj přivede) roste s velikostí byznysu a je volbou hry.',
+      'Platformy nadsazují: Meta ×1,6, TikTok ×2, Criteo ×2, srovnávače ×1,1, e-mail ×1,3. Vyhledávání a PMax si připisují i brandové dotazy. Ilustrativní, ne změřené.',
+      'Povědomí vytváří brandové hledání; nakoupí 6 % hledajících. Povědomí slábne o 25 % týdně.',
+      'Meta a PMax začínají na 60 % výkonu, plný výkon mají po 50 objednávkách. Změna rozpočtu o víc než 50 % stojí 15 % na 2 týdny.',
+      'E-mail stojí 0,30 Kč za kontakt měsíčně; každé rozeslání ubere 0,3 % seznamu (0,5 % při 3× týdně).',
+      'Affiliate: 60 % sledovaných prodejů je opravdu navíc. Tržiště: 5% tlak na cenu navíc k provizi.',
+      'Jednorázové náklady: produktový feed 5 000 Kč, videa pro TikTok 10 000 Kč, e-mailové automatizace 8 000 Kč.',
+      'Ceny bez DPH. Výsledky kolísají náhodně o ±7 %. Události v denní výzvě jsou pro všechny stejné.'
+    ]
+  };
+
+  /* ---------- Events ---------- */
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-act]') : null;
+    if (!el) {
+      if (e.target === layer) closeSheet();
+      return;
+    }
+    var act = el.getAttribute('data-act'), v = el.getAttribute('data-v');
+    var g = S.g;
+    switch (act) {
+      case 'lang': setLang(lang === 'cs' ? 'en' : 'cs'); break;
+      case 'data': openData(); break;
+      case 'close': closeSheet(); break;
+      case 'pick-profile': S.pick.profile = v; renderStart(); break;
+      case 'pick-size': S.pick.size = v; renderStart(); break;
+      case 'pick-mode': S.pick.mode = v; renderStart(); break;
+      case 'start': startGame(); break;
+      case 'play': play(); break;
+      case 'pause': pause(); break;
+      case 'tool': openSheet(v); break;
+      case 'decide': answer(v); break;
+      case 'budget': if (!S.playing) { g.budgets[el.getAttribute('data-tool')] = Number(v); openSheet(S.sheet); renderDock(); } break;
+      case 'freq': if (!S.playing) { g.email.freq = Number(v); openSheet(S.sheet); renderDock(); } break;
+      case 'aff': if (!S.playing) { g.affiliate = Number(v); openSheet(S.sheet); renderDock(); } break;
+      case 'market': if (!S.playing) { g.market = v === 'true'; openSheet(S.sheet); renderDock(); } break;
+      case 'setup': if (!S.playing && E.setup(g, v)) { animateCash(g.cash); openSheet(S.sheet); renderDock(); renderSpark(); } break;
+      case 'share': doShare(el); break;
+      case 'again': S.pick.profile = g.profile; S.pick.size = g.sizeKey; startGame(); break;
+      case 'newbiz': S.screen = 'start'; S.g = null; closeSheet(); render(); break;
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && S.sheet) { closeSheet(); return; }
+    if ((e.key === ' ' || e.code === 'Space') && S.screen === 'game' && !S.sheet && (e.target === document.body || e.target === root)) {
+      e.preventDefault();
+      if (S.playing) pause(); else play();
+    }
+  });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && S.playing) pause(); });
+
+  /* Test hook */
+  window.BudgetBandit = {
+    engine: E, state: function () { return S; },
+    setSpeed: function (ms) { S.speed = ms; },
+    start: function (profile, size, mode) { S.pick = { profile: profile, size: size, mode: mode || 'daily' }; startGame(); }
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>
